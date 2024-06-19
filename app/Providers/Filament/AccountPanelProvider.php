@@ -3,6 +3,10 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Account\Pages\AccountDashboard;
+use App\Filament\Account\Pages\Auth\Register;
+use App\Http\Middleware\AccountMiddleware;
+use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
+use App\Http\Middleware\UserTypeMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -26,12 +30,11 @@ class AccountPanelProvider extends PanelProvider
         return $panel
             ->id('account')
             ->path('account')
+            ->emailVerification()
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->topNavigation()
-            ->login()
-            ->registration()
             ->discoverResources(in: app_path('Filament/Account/Resources'), for: 'App\\Filament\\Account\\Resources')
             ->discoverPages(in: app_path('Filament/Account/Pages'), for: 'App\\Filament\\Account\\Pages')
             ->pages([
@@ -54,7 +57,8 @@ class AccountPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                RedirectIfNotFilamentAuthenticated::class,
+                AccountMiddleware::class,
             ]);
     }
 }
