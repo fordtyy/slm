@@ -30,6 +30,7 @@ class AccountPanelProvider extends PanelProvider
         return $panel
             ->id('account')
             ->path('account')
+            ->emailVerification()
             ->colors([
                 'primary' => Color::Amber,
             ])
