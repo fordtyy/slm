@@ -14,12 +14,11 @@ class RegistrationResponse extends \Filament\Http\Responses\Auth\RegistrationRes
     {
         // You can use the Filament facade to get the current panel and check the ID
         if (Filament::auth()->user()->type === 'admin') {
-            // dd(Filament::auth()->user()->type);
-            return redirect()->to(BorrowResource::getUrl('index'));
+            return redirect('/admin');
         }
  
         if (Filament::auth()->user()->type === 'student') {
-            return redirect()->to(AccountBorrowResource::getUrl('index'));
+            return redirect('/account');
         }
  
         return parent::toResponse($request);
