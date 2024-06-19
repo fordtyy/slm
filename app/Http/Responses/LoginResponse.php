@@ -17,12 +17,10 @@ class LoginResponse extends \Filament\Http\Responses\Auth\LoginResponse
     {
         // You can use the Filament facade to get the current panel and check the ID
         if (Filament::auth()->user()->type === 'admin') {
-            // dd(BorrowResource::getPages()['index']);
             return redirect('/admin');
         }
  
         if (Filament::auth()->user()->type === 'student') {
-            // dd(AccountBorrowResource::getPages()['index']);
             return redirect('/account');
         }
  

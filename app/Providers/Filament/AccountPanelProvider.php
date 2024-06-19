@@ -54,10 +54,10 @@ class AccountPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                AccountMiddleware::class,
             ])
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
+                AccountMiddleware::class,
             ]);
     }
 }

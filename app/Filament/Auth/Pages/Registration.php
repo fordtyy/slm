@@ -10,14 +10,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Auth\Register as BaseRegister;
 
-use Filament\Pages\Page;
-
 class Registration extends BaseRegister
 {
-    // protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
-    // protected static string $view = 'filament.auth.pages.registration';
-
+    
     protected function getForms(): array
     {
         return [

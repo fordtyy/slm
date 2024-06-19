@@ -19,10 +19,6 @@ class AppServiceProvider extends ServiceProvider
             LoginResponse::class,
             \App\Http\Responses\LoginResponse::class
         );
-        $this->app->singleton(
-            RegistrationResponse::class,
-            \App\Http\Responses\RegistrationResponse::class,
-        );
     }
 
     /**
