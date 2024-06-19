@@ -2,11 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Account\Pages\AccountDashboard;
-use App\Filament\Account\Pages\Auth\Register;
-use App\Http\Middleware\AccountMiddleware;
+use App\Filament\Auth\Pages\Registration;
 use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
-use App\Http\Middleware\UserTypeMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -23,23 +20,26 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class AccountPanelProvider extends PanelProvider
+class AuthPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('account')
-            ->path('account')
+            ->id('auth')
+            ->path('auth')
+            ->login()
+            ->registration(Registration::class)
+            ->passwordReset()
+            ->emailVerification()
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->topNavigation()
-            ->discoverResources(in: app_path('Filament/Account/Resources'), for: 'App\\Filament\\Account\\Resources')
-            ->discoverPages(in: app_path('Filament/Account/Pages'), for: 'App\\Filament\\Account\\Pages')
+            ->discoverResources(in: app_path('Filament/Auth/Resources'), for: 'App\\Filament\\Auth\\Resources')
+            ->discoverPages(in: app_path('Filament/Auth/Pages'), for: 'App\\Filament\\Auth\\Pages')
             ->pages([
-                AccountDashboard::class
+                Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Account/Widgets'), for: 'App\\Filament\\Account\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Auth/Widgets'), for: 'App\\Filament\\Auth\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
@@ -54,7 +54,6 @@ class AccountPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                AccountMiddleware::class,
             ])
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
