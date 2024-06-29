@@ -3,14 +3,11 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Account\Pages\AccountDashboard;
-use App\Filament\Account\Pages\Auth\Register;
 use App\Http\Middleware\AccountMiddleware;
 use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
-use App\Http\Middleware\UserTypeMiddleware;
-use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages;
+use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -22,6 +19,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Joaopaulolndev\FilamentEditProfile\FilamentEditProfilePlugin;
+use Joaopaulolndev\FilamentEditProfile\Pages\EditProfilePage;
 
 class AccountPanelProvider extends PanelProvider
 {
@@ -44,6 +43,22 @@ class AccountPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+            ])
+            ->userMenuItems([
+                'profile' => MenuItem::make()
+                    ->label('My Profile')
+                    ->url(fn (): string => EditProfilePage::getUrl())
+                    ->icon('heroicon-o-user'),
+            ])
+            ->plugins([
+                FilamentEditProfilePlugin::make()
+                    ->customProfileComponents([
+                        \App\Livewire\UserProfile::class,
+                    ])
+                    ->shouldShowBrowserSessionsForm(false)
+                    ->shouldShowEditProfileForm(false)
+                    ->shouldShowDeleteAccountForm(false)
+                    ->shouldRegisterNavigation(false)
             ])
             ->middleware([
                 EncryptCookies::class,

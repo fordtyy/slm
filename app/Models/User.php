@@ -29,7 +29,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'type',
         'course_id',
         'year_level_id',
-        'usn'
+        'usn',
+        'email_verified_at'
     ];
 
     public function course(): BelongsTo
