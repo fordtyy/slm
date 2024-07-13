@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Category;
 
 return new class extends Migration
 {
@@ -13,10 +14,15 @@ return new class extends Migration
     {
         Schema::create('books', function (Blueprint $table) {
             $table->id();
-            $table->string('cover');
+            $table->string('isbn');
             $table->string('title');
-            $table->string('description');
-            $table->string('status');
+            $table->string('cover');
+            $table->string('label');
+            $table->string('edition');
+            $table->string('year');
+            $table->string('copies');
+            $table->string('volume');
+            $table->foreignIdFor(Category::class)->constrained()->nullOnDelete();
             $table->softDeletesTz();
             $table->timestamps();
         });
