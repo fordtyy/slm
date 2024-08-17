@@ -3,8 +3,10 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Account\Pages\AccountDashboard;
+use App\Filament\Account\Pages\BrowseBooks;
 use App\Http\Middleware\AccountMiddleware;
 use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
+use App\Livewire\BrowseBookPage;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
@@ -37,8 +39,10 @@ class AccountPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Account/Resources'), for: 'App\\Filament\\Account\\Resources')
             ->discoverPages(in: app_path('Filament/Account/Pages'), for: 'App\\Filament\\Account\\Pages')
             ->pages([
-                AccountDashboard::class
+                AccountDashboard::class,
+                BrowseBooks::class,
             ])
+            ->viteTheme('resources/css/filament/account/theme.css')
             ->discoverWidgets(in: app_path('Filament/Account/Widgets'), for: 'App\\Filament\\Account\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,

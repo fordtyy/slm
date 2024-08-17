@@ -70,7 +70,6 @@ class BookResource extends Resource
                     Forms\Components\TextInput::make('copies')
                         ->numeric()
                         ->required(),
-
                     Forms\Components\Select::make('author')
                         ->relationship(name: 'authors', titleAttribute: 'name')
                         ->createOptionForm([
@@ -81,8 +80,8 @@ class BookResource extends Resource
                         ->searchable()
                         ->native(false)
                         ->required(),
-                    Forms\Components\Select::make('tag')
-                        ->relationship(name: 'tag', titleAttribute: 'name')
+                    Forms\Components\Select::make('tags')
+                        ->relationship(name: 'tags', titleAttribute: 'name')
                         ->createOptionForm([
                             Forms\Components\TextInput::make('name')
                         ])
@@ -99,7 +98,8 @@ class BookResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('cover'),
+                Tables\Columns\ImageColumn::make('cover')
+                  ->size(300),
                 Tables\Columns\TextColumn::make('isbn')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')

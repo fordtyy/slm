@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use phpDocumentor\Reflection\DocBlock\TagFactory;
 
@@ -26,7 +26,6 @@ class Book extends Model
         'volume',
         'copies'
     ];
-
 
     /**
      * The categories that belong to the Book
@@ -49,6 +48,16 @@ class Book extends Model
     }
 
     /**
+     * Get all of the bookborrow for the Book
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bookborrows(): HasMany
+    {
+        return $this->hasMany(BookBorrow::class);
+    }
+
+    /**
      * The borrow that belong to the Book
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -63,9 +72,29 @@ class Book extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function tag(): BelongsToMany
+    public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+        /**
+     * The wishlists that belong to the Book
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function wishlists(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * The user that belong to the Book
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class);
     }
 
 }

@@ -9,7 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
@@ -76,6 +77,26 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * The books that belong to the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function wishLists(): HasMany
+    {
+        return $this->hasMany(BookUser::class);
+    }
+
+    /**
+     * Get all of the borrows for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function borrows(): HasMany
+    {
+        return $this->hasMany(Borrow::class);
     }
 
 }

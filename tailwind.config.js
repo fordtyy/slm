@@ -5,10 +5,10 @@ export default {
     presets: [preset],
     content: [
         './app/Filament/**/*.php',
+        './app/Livewire/**/*.php',
         './resources/views/**/*.blade.php',
-        '.resources/views/components/**/*.blade.php',
         './vendor/filament/**/*.blade.php',
         './node_modules/flowbite/**/*.js',
     ],
-    plugins: [require("flowbite/plugin")],
+    plugins: [require('flowbite/plugin')],
 }

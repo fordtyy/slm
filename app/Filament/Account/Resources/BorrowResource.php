@@ -20,18 +20,6 @@ class BorrowResource extends Resource
     protected static ?string $navigationGroup = 'Request';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('books')
-                    ->relationship(name: 'books', titleAttribute: 'title')
-                    ->multiple()
-                    ->preload()
-                    ->native(false)
-            ]);
-    }
-
     public static function table(Table $table): Table
     {
         return $table

@@ -50,4 +50,14 @@ class Borrow extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get all of the bookborrow for the Borrow
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bookborrows(): HasMany
+    {
+        return $this->hasMany(BookBorrow::class);
+    }
 }
