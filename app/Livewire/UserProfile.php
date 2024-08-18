@@ -2,6 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\Author;
+use App\Models\AuthorUser;
+use App\Models\Category;
 use App\Models\User;
 use Exception;
 use Filament\Facades\Filament;
@@ -9,6 +12,8 @@ use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Auth\VerifyEmail;
 use Filament\Notifications\Notification;
@@ -23,18 +28,38 @@ class UserProfile extends Component implements HasForms
     use InteractsWithForms;
     use HasSort;
 
-    public ?array $data = [];
+    public ?array $userData = [];
+    public ?array $userPref = [];
 
     protected static int $sort = 0;
 
     public function mount(): void
     {
-        $data = $this->getUser()->attributesToArray();
+        $user = $this->getUser();
 
-        $this->form->fill($data);
+        $userData = $user->attributesToArray();
+        $this->profileInformationForm->fill($userData);
+
+        $userCatPref = $user->categoryPrefs->pluck('id')->toArray();
+        $userAuthPref = $user->authorPrefs->pluck('id')->toArray();
+        $this->userPreferencesForm->fill(
+          [
+            'categoryPrefs' => $userCatPref,
+            'authorPrefs' => $userAuthPref,
+          ]
+        );
+
     }
 
-    public function form(Form $form): Form
+    protected function getForms(): array
+    {
+        return [
+            'profileInformationForm',
+            'userPreferencesForm',
+        ];
+    }
+
+    public function profileInformationForm(Form $form): Form
     {
         return $form
             ->schema([
@@ -71,19 +96,57 @@ class UserProfile extends Component implements HasForms
                             ->visible(fn() => Filament::getCurrentPanel()->getId() === 'account'),
                     ]),
             ])
-            ->statePath('data')
+            ->statePath('userData')
             ->model(User::class);
     }
 
-    public function save(): void
+    public function userPreferencesForm(Form $form): Form
     {
-        $data = $this->form->getState();
+      return $form
+        ->schema([
+          Section::make('User Preferences')
+                    ->aside()
+                    ->description('Update your account preferences')
+                    ->schema([
+                      Forms\Components\Select::make('categoryPrefs')
+                        ->relationship(name: 'categoryPrefs', titleAttribute: 'name')
+                        ->createOptionForm([
+                          TextInput::make('name')
+                        ])
+                        ->label('Category Preferences')
+                        ->placeholder('Choose your category preferences')
+                        ->native(false)
+                        ->searchable()
+                        ->multiple()
+                        ->preload()
+                        ->maxItems(10),
+                      Forms\Components\Select::make('authorPrefs')
+                        ->relationship(name: 'authorPrefs', titleAttribute: 'name')
+                        ->createOptionForm([
+                          TextInput::make('name')
+                        ])
+                        ->label('Author Preferences')
+                        ->placeholder('Choose your author preferences')
+                        ->native(false)
+                        ->searchable()
+                        ->multiple()
+                        ->preload()
+                        ->maxItems(10),
+                    ])
+        ])
+        ->statePath('userPref')
+        ->model(User::class);
+    }
 
-        $updatedUser = $this->handleRecordUpdate($this->getUser(), $data);
+    public function saveUserInformation(): void
+    {
+        $userData = $this->profileInformationForm->getState();
+
+        $updatedUser = $this->handleRecordUpdate($this->getUser(), $userData);
 
         Notification::make()
             ->success()
-            ->title('Successfully saved!')
+            ->title('Profile Information successfully saved!')
             ->send();
 
         if (!$updatedUser->hasVerifiedEmail()) {
@@ -99,15 +162,35 @@ class UserProfile extends Component implements HasForms
         }
     }
 
-    protected function handleRecordUpdate(Model $record, array $data): Model
+    public function saveUserPreference() : void
     {
-        if ($data['email'] != $record->email) {
-            $data['email_verified_at'] = null;
+      $this->handleRecordUpdate($this->getUser(), $this->userPref);
+
+      Notification::make()
+        ->success()
+        ->title('User Preferences successfully saved!')
+        ->send();
+    }
+
+    protected function handleRecordUpdate(Model $record, array $userData): Model
+    {
+
+        if (isset($userData['email']) && $userData['email'] != $record->email) {
+            $userData['email_verified_at'] = null;
         }
 
-        $record->update($data);
+        if (isset($userData['categoryPrefs'])) {
+          $record->categoryPrefs()->sync($userData['categoryPrefs']);
+        }
+
+        if (isset($userData['authorPrefs'])) {
+          $record->authorPrefs()->sync($userData['authorPrefs']);
+        }
+
+        $record->update($userData);
 
         return $record;
+
     }
 
     public function getUser(): Authenticatable & Model

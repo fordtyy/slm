@@ -99,4 +99,23 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(Borrow::class);
     }
 
+    /**
+     * Get all of the authorPrefs for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function authorPrefs(): BelongsToMany
+    {
+        return $this->belongsToMany(Author::class);
+    }
+
+    /**
+     * Get all of the categoryPrefs for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function categoryPrefs(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class);
+    }
 }

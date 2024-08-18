@@ -22,4 +22,14 @@ class Category extends Model
     {
         return $this->hasMany(Book::class);
     }
+
+    /**
+     * Get all of the categoryPrefs for the Category
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function categoryPrefs(): HasMany
+    {
+        return $this->hasMany(CategoryUser::class);
+    }
 }
