@@ -32,23 +32,21 @@ class AuthorResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->withCount('books'))
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('books_count')
+                    ->label('Book Published')
+                    ->badge()
+                    ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -68,8 +66,6 @@ class AuthorResource extends Resource
     {
         return [
             'index' => Pages\ListAuthors::route('/'),
-            'create' => Pages\CreateAuthor::route('/create'),
-            'edit' => Pages\EditAuthor::route('/{record}/edit'),
         ];
     }
 }

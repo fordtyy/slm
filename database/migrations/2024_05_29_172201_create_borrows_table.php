@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('borrows', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->string('code');
             $table->string('status');
             $table->dateTime('start_date')->nullable();
             $table->dateTime('due_date')->nullable();

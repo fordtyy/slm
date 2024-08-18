@@ -8,13 +8,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
-    
+
     use HasFactory, Notifiable;
 
 
@@ -33,28 +34,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'usn',
         'email_verified_at'
     ];
-
-    public function course(): BelongsTo
-    {
-        return $this->belongsTo(Course::class);
-    }
-
-    public function yearLevel(): BelongsTo
-    {
-        return $this->belongsTo(YearLevel::class);
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (User $user) {
-            $user->type = 'student';
-        });
-    }
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return true;
-    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -77,6 +56,35 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            $user->type = 'student';
+        });
+    }
+
+    public function yearLevelAndCourse(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->yearLevel->name . ' ' . $this->course->code
+        );
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function yearLevel(): BelongsTo
+    {
+        return $this->belongsTo(YearLevel::class);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Status;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -26,6 +27,13 @@ class Book extends Model
         'volume',
         'copies'
     ];
+
+    public function authorsName(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => implode(', ', $this->authors->map(fn($author) => $author->name)->all())
+        );
+    }
 
     /**
      * The categories that belong to the Book
@@ -67,7 +75,7 @@ class Book extends Model
         return $this->belongsToMany(Borrow::class);
     }
 
-        /**
+    /**
      * The tag that belong to the Book
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -77,7 +85,7 @@ class Book extends Model
         return $this->belongsToMany(Tag::class);
     }
 
-        /**
+    /**
      * The wishlists that belong to the Book
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -96,5 +104,4 @@ class Book extends Model
     {
         return $this->belongsToMany(User::class);
     }
-
 }

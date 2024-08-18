@@ -3,12 +3,12 @@
         {{ $this->form }}
     </div>
 
-    <div class="grid grid-cols-3 w-full gap-4">
+    <div class="grid grid-cols-4 w-full gap-4">
         @foreach ($this->books as $book)
             <x-card wire:key="{{ $book->id }}-books" :book="$book" />
         @endforeach
     </div>
-    
+
     <x-filament::modal id="borrow-modal">
         <x-slot name="heading">
             Confirmation
@@ -20,7 +20,7 @@
 
         <x-slot name="footer">
             <div class="flex justify-end space-x-2">
-                <x-filament::button 
+                <x-filament::button
                   wire:click="closeModal"
                   size="sm"
                   color="gray"
@@ -29,7 +29,7 @@
                   ])>
                     Cancel
                 </x-filament::button>
-                <x-filament::button 
+                <x-filament::button
                   wire:click="confirmBorrow"
                   color="primary"
                   size="sm"

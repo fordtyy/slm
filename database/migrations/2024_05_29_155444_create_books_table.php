@@ -16,12 +16,12 @@ return new class extends Migration
             $table->id();
             $table->string('isbn');
             $table->string('title');
-            $table->string('cover');
+            $table->string('cover')->nullable();
             $table->string('label');
-            $table->string('edition');
+            $table->string('edition')->nullable();
             $table->string('year');
             $table->string('copies');
-            $table->string('volume');
+            $table->string('volume')->nullable();
             $table->foreignIdFor(Category::class)->constrained()->nullOnDelete();
             $table->softDeletesTz();
             $table->timestamps();

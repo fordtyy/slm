@@ -15,6 +15,7 @@ class Borrow extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'code',
         'start_date',
         'due_date',
         'status',
@@ -30,6 +31,22 @@ class Borrow extends Model
     protected $attributes = [
         'status' => BorrowStatus::PENDING
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    public static function booted()
+    {
+        parent::boot();
+
+        self::creating(function (Borrow $model) {
+            $date = now()->format('Ymd-');
+
+            $totalBorrowToday = Borrow::whereDate('created_at', now()->today())->count();
+
+            $model->code = 'BR-' . $date . str($totalBorrowToday + 1)->padLeft(3, '0');
+        });
+    }
 
     /**
      * Get all of the books for the Borrow

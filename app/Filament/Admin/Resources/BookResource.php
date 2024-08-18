@@ -13,6 +13,7 @@ use Filament\Infolists;
 use Filament\Resources\Resource;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -32,6 +33,7 @@ class BookResource extends Resource
                         ->required()
                         ->columnspan(1),
                     Forms\Components\TextInput::make('isbn')
+                        ->label('ISBN')
                         ->required()
                         ->unique(ignoreRecord: true),
                 ])
@@ -45,8 +47,7 @@ class BookResource extends Resource
 
                 Forms\Components\Group::make([
 
-                    Forms\Components\TextInput::make('edition')
-                        ->required(),
+                    Forms\Components\TextInput::make('edition'),
                     Forms\Components\TextInput::make('label')
                         ->required(),
                     Forms\Components\DatePicker::make('year')
@@ -57,16 +58,16 @@ class BookResource extends Resource
                         ->relationship(name: 'category', titleAttribute: 'name')
                         ->createOptionForm([
                             Forms\Components\TextInput::make('name')
+                                ->unique(ignoreRecord: true)
                         ])
                         ->searchable()
+                        ->preload()
                         ->native(false)
-                        ->required()
-                        ->unique(ignoreRecord: true),
+                        ->required(),
                 ])
                     ->columns(2),
                 Forms\Components\Group::make([
-                    Forms\Components\TextInput::make('volume')
-                        ->required(),
+                    Forms\Components\TextInput::make('volume'),
                     Forms\Components\TextInput::make('copies')
                         ->numeric()
                         ->required(),
@@ -74,9 +75,10 @@ class BookResource extends Resource
                         ->relationship(name: 'authors', titleAttribute: 'name')
                         ->createOptionForm([
                             Forms\Components\TextInput::make('name')
+                                ->unique()
                         ])
                         ->multiple()
-                        ->unique(ignoreRecord: true)
+                        ->preload()
                         ->searchable()
                         ->native(false)
                         ->required(),
@@ -84,12 +86,12 @@ class BookResource extends Resource
                         ->relationship(name: 'tags', titleAttribute: 'name')
                         ->createOptionForm([
                             Forms\Components\TextInput::make('name')
+                                ->unique()
                         ])
                         ->searchable()
+                        ->preload()
                         ->multiple()
-                        ->native(false)
-                        ->required()
-                        ->unique(ignoreRecord: true),
+                        ->native(false),
                 ])->columns(2),
             ]);
     }
@@ -99,8 +101,9 @@ class BookResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('cover')
-                  ->size(300),
+                    ->label(''),
                 Tables\Columns\TextColumn::make('isbn')
+                    ->label('ISBN')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
@@ -110,8 +113,6 @@ class BookResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('year')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('volume')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('authors.name')
                     ->badge()
                     ->searchable(),
@@ -120,21 +121,14 @@ class BookResource extends Resource
                 Tables\Columns\TextColumn::make('tag.name')
                     // ->badge()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('category')
+                    ->relationship('category', 'name')
+                    ->native(false),
+                SelectFilter::make('authors')
+                    ->relationship('authors', 'name')
+                    ->native(false),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
