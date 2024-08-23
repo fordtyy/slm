@@ -22,7 +22,7 @@ class BorrowService
     {
         $data = ['status' => $status];
 
-        if ($borrow->status === BorrowStatus::RELEASED) {
+        if ($status === BorrowStatus::RELEASED->value) {
             $now = now();
 
             $data['start_date'] = $now;

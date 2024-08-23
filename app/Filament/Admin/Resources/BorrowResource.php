@@ -60,9 +60,9 @@ class BorrowResource extends Resource
                     ->description(fn(Borrow $record) => $record->user->yearLevelAndCourse),
 
                 Tables\Columns\TextColumn::make('start_date')
-                    ->dateTime('M j, H:i A'),
+                    ->dateTime('M j, h:i A'),
                 Tables\Columns\TextColumn::make('due_date')
-                    ->dateTime('M j, H:i A'),
+                    ->dateTime('M j, h:i A'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->date()
                     ->label('Submitted At'),
