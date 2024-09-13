@@ -4,10 +4,11 @@ import preset from '../../../../vendor/filament/filament/tailwind.config.preset'
 export default {
     presets: [preset],
     content: [
-        './resources/**/*.blade.php',
-        './resources/**/*.js',
-        './resources/**/*.vue',
-        './node_modules/flowbite/**/*.js'
+        './app/Filament/**/*.php',
+        './app/Livewire/**/*.php',
+        './resources/views/**/*.blade.php',
+        './vendor/filament/**/*.blade.php',
+        './node_modules/flowbite/**/*.js',
     ],
     plugins: [require('flowbite/plugin')],
 }

@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\BorrowStatus;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Borrow extends Model
@@ -21,6 +23,8 @@ class Borrow extends Model
         'status',
         'user_id'
     ];
+
+    protected $dates = ['due_date', 'start_date'];
 
     protected $casts = [
         'status' => BorrowStatus::class,
@@ -76,5 +80,22 @@ class Borrow extends Model
     public function bookborrows(): HasMany
     {
         return $this->hasMany(BookBorrow::class);
+    }
+
+    /**
+     * Get the extension associated with the Borrow
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function extension(): HasOne
+    {
+        return $this->hasOne(Extension::class);
+    }
+
+    public function canBeExtended(): bool
+    {
+        return $this->status == BorrowStatus::RELEASED
+            && $this->due_date?->gte(now())
+            && !$this->extension()->exists();
     }
 }

@@ -75,6 +75,8 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
                 AdminMiddleware::class,
-            ]);
+            ])
+            ->databaseNotifications()
+            ->viteTheme('resources/css/filament/admin/theme.css');
     }
 }

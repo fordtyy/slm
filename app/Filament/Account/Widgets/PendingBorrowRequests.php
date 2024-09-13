@@ -29,6 +29,7 @@ class PendingBorrowRequests extends BaseWidget
             ->defaultPaginationPageOption(5)
             ->defaultSort('created_at', 'desc')
             ->columns([
+                Tables\Columns\TextColumn::make('code'),
                 Tables\Columns\TextColumn::make('books.title'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->date()

@@ -3,6 +3,8 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Enums\BorrowStatus;
+use App\Enums\ExtensionDays;
+use App\Enums\ExtensionStatus;
 use App\Filament\Admin\Resources\BorrowResource\Pages;
 use App\Filament\Admin\Resources\BorrowResource\RelationManagers;
 use App\Models\Borrow;
@@ -11,14 +13,17 @@ use Filament\Forms;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
+use Filament\Infolists;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class BorrowResource extends Resource
 {
@@ -53,8 +58,6 @@ class BorrowResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('code')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Borrower')
                     ->description(fn(Borrow $record) => $record->user->yearLevelAndCourse),
@@ -75,39 +78,147 @@ class BorrowResource extends Resource
                     ->getTitleFromRecordUsing(fn($record) => $record->status->getTitle())
                     ->getDescriptionFromRecordUsing(fn($record) => $record->status->description())
             )
+            ->filters([
+                SelectFilter::make('user_id')
+                    ->relationship('user', 'name')
+                    ->native(false)
+                    ->searchable()
+                    ->preload()
+            ])
             ->actions([
-                Tables\Actions\Action::make('updateStatus')
-                    ->label('Update Status')
-                    ->button()
-                    ->color('info')
-                    ->visible(fn($record) => $record->status->value != 'Returned')
-                    ->form(fn($record) => [
-                        Forms\Components\Group::make([
-                            Placeholder::make('currStatus')
-                                ->label('Current Status')
-                                ->content($record->status->getTitle()),
-                            Select::make('status')
-                                ->label('New Status')
-                                ->options(BorrowStatus::class)
-                                ->native(false)
-                                ->disableOptionWhen(fn(string $value): bool =>  $value === $record->status->value)
-                                ->required()
-                        ])->columns(2)
-                    ])
-                    ->action(function (array $data, Borrow $record) {
-
-                        BorrowService::updateStatus($record, $data['status']);
+                Tables\Actions\Action::make('approve')
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->iconButton()
+                    ->requiresConfirmation()
+                    ->visible(fn($record) => $record->status == BorrowStatus::PENDING)
+                    ->action(function (Borrow $record) {
+                        BorrowService::updateStatus($record, BorrowStatus::APPROVED->value);
+                        Notification::make()
+                            ->info()
+                            ->title('Approved Borrow Request 👍')
+                            ->body("Admin approved your borrow request. Please check your email for more info.")
+                            ->sendToDatabase($record->user);
                         Notification::make()
                             ->success()
-                            ->title('Request status successfully updated!')
+                            ->title('Success Approval')
+                            ->body("Borrow Request [" . $record->code . "] approved successfully")
+                            ->sendToDatabase(Auth::user())
                             ->send();
                     }),
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\Action::make('reject')
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
+                    ->iconButton()
+                    ->requiresConfirmation()
+                    ->visible(fn($record) => $record->status == BorrowStatus::PENDING)
+                    ->action(function (Borrow $record) {
+                        BorrowService::updateStatus($record, BorrowStatus::REJECTED->value);
+                        Notification::make()
+                            ->info()
+                            ->title('Rejected Borrow Request 👎')
+                            ->body("Admin reject your borrow request. Please check your email for more info.")
+                            ->sendToDatabase($record->user);
+                        Notification::make()
+                            ->success()
+                            ->title("Success Rejection")
+                            ->body("Borrow Request [" . $record->code . "] rejected successfully")
+                            ->sendToDatabase(Auth::user())
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('release')
+                    ->color('info')
+                    ->icon('heroicon-o-bars-arrow-up')
+                    ->iconButton()
+                    ->requiresConfirmation()
+                    ->visible(fn($record) => $record->status == BorrowStatus::APPROVED)
+                    ->action(function (Borrow $record) {
+                        BorrowService::updateStatus($record, BorrowStatus::RELEASED->value);
+                        Notification::make()
+                            ->info()
+                            ->title('Released Borrow Request 🚀')
+                            ->body("Admin released your borrow request. Please check your email for more info.")
+                            ->sendToDatabase($record->user);
+                        Notification::make()
+                            ->success()
+                            ->title("Success Released")
+                            ->body("Borrow Request [" . $record->code . "] released successfully")
+                            ->sendToDatabase(Auth::user())
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('return')
+                    ->color('info')
+                    ->icon('heroicon-o-bars-arrow-down')
+                    ->iconButton()
+                    ->requiresConfirmation()
+                    ->visible(fn($record) => $record->status == BorrowStatus::RELEASED)
+                    ->action(function (Borrow $record) {
+                        BorrowService::updateStatus($record, BorrowStatus::RETURNED->value);
+                        Notification::make()
+                            ->info()
+                            ->title('Returned Borrow Request 🎉')
+                            ->body("Borrowed books marked as returned.")
+                            ->sendToDatabase($record->user);
+                        Notification::make()
+                            ->success()
+                            ->title("Success Released")
+                            ->body("Borrow Request [" . $record->code . "] released successfully")
+                            ->sendToDatabase(Auth::user())
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('add_extension')
+                    ->icon('heroicon-o-folder-plus')
+                    ->iconButton()
+                    ->form([
+                        Forms\Components\ToggleButtons::make('number_of_days')
+                            ->options(ExtensionDays::class)
+                            ->inline()
+                            ->required(),
+                        Forms\Components\Textarea::make('reason')
+                            ->required(),
+                    ])
+                    ->visible(fn($record) => $record->canBeExtended())
+                    ->action(function (array $data, Borrow $record) {
+                        $data['status'] = ExtensionStatus::PENDING;
+
+                        $record->extension()->create($data);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Extension Request Created!')
+                            ->body('Admin extended your Borrow Request. Please check your email for more info.')
+                            ->sendToDatabase($record->user);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Extension Request created!')
+                            ->body('Added Extension Request for Borrow Request [' . $record->code . ']')
+                            ->sendToDatabase(Auth::user())
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('view_request_extension')
+                    ->icon('heroicon-o-folder-open')
+                    ->iconButton()
+                    ->visible(fn($record) => $record->extension()->exists())
+                    ->infolist([
+
+                        Infolists\Components\TextEntry::make('extension.code')
+                            ->label('Code')
+                            ->inlineLabel(),
+                        Infolists\Components\TextEntry::make('extension.number_of_days')
+                            ->label('Number of Days')
+                            ->inlineLabel(),
+                        Infolists\Components\TextEntry::make('extension.status')
+                            ->label('Status')
+                            ->inlineLabel()
+                            ->badge(),
+                        Infolists\Components\TextEntry::make('extension.reason')
+                            ->inlineLabel()
+                            ->label('Reason')
+                    ])
+                    ->modalCancelAction(false)
+                    ->modalSubmitActionLabel('Close')
+                    ->modalFooterActionsAlignment(Alignment::Right),
             ]);
     }
 

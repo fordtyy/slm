@@ -26,7 +26,7 @@ class BorrowService
             $now = now();
 
             $data['start_date'] = $now;
-            $data['due_date'] = $now->copy()->addDays(3);
+            $data['due_date'] = $now->copy()->addWeekdays(3);
         }
 
         $borrow->update($data);
