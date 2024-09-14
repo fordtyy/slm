@@ -28,7 +28,7 @@
         </div>
     </section>
     <section id="books" class="bg-white dark:bg-gray-900">
-        <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
+        <div id="child-books" class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
             <div class="mx-auto max-w-screen-md text-center mb-8 lg:mb-12">
                 <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">
                     Explore books that fits to your needs
@@ -37,45 +37,35 @@
                     We show you what most interest you and helps you in getting better.
                 </p>
             </div>
-            <div class="relative rounded-xl overflow-auto">
-                <div class="relative">
-                    <h3 class="text-2xl font-bold">Trending</h3>
-                    <!-- Contents -->
-                    <div class="relative w-full flex gap-6 snap-x snap-mandatory overflow-x-auto py-8">
-                        @foreach ($books as $book)
-                            <div class="snap-center shrink-0">
-                                <img class="shrink-0 w-100 h-40 rounded-lg shadow-xl bg-white"
-                                    src="{{ asset('/storage/' . $book->cover) }}">
-                                <div class="flex py-2">
-                                    <x-filament::button class="w-full">Borrow</x-filament::button>
-                                </div>
-                            </div>
-                        @endforeach
-
-                        <div class="snap-center shrink-0">
-                            <div class="shrink-0 w-4 sm:w-48"></div>
-                        </div>
+            <div class="container">
+              <div>
+                <div>
+                  <h3 class="text-2xl font-bold">Most Borrowed Books</h3>
+                </div>
+                <div>
+                    <div class="scroll-container py-4 ">
+                      @foreach ($this->books as $book)
+                        <div class="scroll-card p-4 mt-4">
+                          <x-card wire:key="{{ $book->id }}-books" :book="$book" />
+                      </div>
+                    @endforeach
                     </div>
                 </div>
-                <div class="relative mt-10">
-                    <h3 class="text-2xl font-bold">Most Borrow</h3>
-                    <!-- Contents -->
-                    <div class="relative w-full flex gap-6 snap-x snap-mandatory overflow-x-auto py-8">
-                        @foreach ($books->take(4) as $book)
-                            <div class="snap-center shrink-0">
-                                <img class="shrink-0 w-100 h-40 rounded-lg shadow-xl bg-white"
-                                    src="{{ asset('/storage/' . $book->cover) }}">
-                                <div class="flex py-2">
-                                    <x-filament::button class="w-full">Borrow</x-filament::button>
-                                </div>
-                            </div>
-                        @endforeach
-
-                        <div class="snap-center shrink-0">
-                            <div class="shrink-0 w-4 sm:w-48"></div>
-                        </div>
+              </div>
+              <div class="mt-5">
+                <div>
+                  <h3 class="text-2xl font-bold">Books You May Like</h3>
+                </div>
+                <div>
+                    <div class="scroll-container py-4">
+                      @foreach ($this->youMayLike as $book)
+                        <div class="scroll-card p-4 mt-1">
+                          <x-card wire:key="{{ $book->id }}-books" :book="$book" />
+                      </div>
+                    @endforeach
                     </div>
                 </div>
+              </div>
             </div>
         </div>
     </section>

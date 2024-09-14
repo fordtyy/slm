@@ -20,9 +20,10 @@
                 <x-filament::button 
                     wire:click="borrowBook({{ $book->id }})"
                     @class([
-                        'col-span-5 text-sm',
-                        'col-span-6' => $this->addedToWishList($book)
-                    ])>
+                        'col-span-5 text-sm card-button-borrow',
+                        'col-span-6 card-button-borrow' => $this->addedToWishList($book)
+                    ])
+                    >
                     Borrow
                 </x-filament::button>
                 @if (!$this->addedToWishList($book))
