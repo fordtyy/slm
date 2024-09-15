@@ -50,7 +50,7 @@ class BrowseBookPage extends Component implements HasForms, HasActions
     #[Computed]
     public function books()
     {
-        $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn('status', [BorrowStatus::PENDING, BorrowStatus::APPROVED])
+        $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn('status', [BorrowStatus::PENDING, BorrowStatus::APPROVED, BorrowStatus::RELEASED, BorrowStatus::EXTENDED])
             ->where('user_id', Auth::id()))
             ->pluck('book_id');
 

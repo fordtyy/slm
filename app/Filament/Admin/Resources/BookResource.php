@@ -118,7 +118,7 @@ class BookResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('category.name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('tag.name')
+                Tables\Columns\TextColumn::make('tags.name')
                     // ->badge()
                     ->searchable(),
             ])
@@ -133,6 +133,7 @@ class BookResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -195,7 +196,7 @@ class BookResource extends Resource
                         Infolists\Components\TextEntry::make('authors.name')
                             ->color('primary')
                             ->size(TextEntry\TextEntrySize::Medium),
-                        Infolists\Components\TextEntry::make('tag.name')
+                        Infolists\Components\TextEntry::make('tags.name')
                             ->color('primary')
                             ->size(TextEntry\TextEntrySize::Medium),
                     ])
