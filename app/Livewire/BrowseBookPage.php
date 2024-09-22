@@ -7,11 +7,8 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookBorrow;
 use App\Models\BookUser;
-use App\Models\Borrow;
 use App\Models\Category;
 use App\Models\Tag;
-use App\Models\User;
-use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
@@ -20,13 +17,11 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
-use phpDocumentor\Reflection\Types\Boolean;
 
 class BrowseBookPage extends Component implements HasForms, HasActions
 {
@@ -63,8 +58,9 @@ class BrowseBookPage extends Component implements HasForms, HasActions
             ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
                 $query->whereIn('tag_id', $value);
             }))
+            ->where('copies', '>' , 0)
             ->whereNotIn('id', $bookBorrows)
-            ->paginate(9);
+            ->paginate(12);
     }
 
     public function addToWishList(Book $book)

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8">
@@ -16,8 +16,8 @@
         }
     </style>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @filamentStyles
+    @vite('resources/css/app.css')
 </head>
 
 <body class="antialiased">
@@ -26,17 +26,7 @@
     <x-footer></x-footer>
 
     @filamentScripts
-    <script>
-        const navbar = document.getElementById('navbar')
-        window.addEventListener('scroll', () => {
-
-            if (window.scrollY >= 64) {
-                navbar.classList.remove('border-transparent')
-            } else {
-                navbar.classList.add('border-transparent')
-            }
-        })
-    </script>
+    @vite('resources/js/app.js')
 </body>
 
 </html>
