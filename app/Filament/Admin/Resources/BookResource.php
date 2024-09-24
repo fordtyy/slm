@@ -12,11 +12,15 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists;
 use Filament\Resources\Resource;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Actions\ActionGroup;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class BookResource extends Resource
 {
@@ -30,7 +34,6 @@ class BookResource extends Resource
             ->schema([
                 Forms\Components\Group::make([
                     Forms\Components\FileUpload::make('cover')
-                        ->required()
                         ->columnspan(1),
                     Forms\Components\TextInput::make('isbn')
                         ->label('ISBN')
@@ -119,7 +122,6 @@ class BookResource extends Resource
                 Tables\Columns\TextColumn::make('category.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('tags.name')
-                    // ->badge()
                     ->searchable(),
             ])
             ->filters([

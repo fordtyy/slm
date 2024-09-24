@@ -35,6 +35,13 @@ class Book extends Model
         );
     }
 
+    public function tagsName(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => implode(', ', $this->tags->map(fn($author) => $author->name)->all())
+        );
+    }
+
     /**
      * The categories that belong to the Book
      *

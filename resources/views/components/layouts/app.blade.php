@@ -24,7 +24,7 @@
     <x-navbar></x-navbar>
     {{ $slot }}
     <x-footer></x-footer>
-
+    @livewire('notifications')
     @filamentScripts
     <script>
         const navbar = document.getElementById('navbar')

@@ -7,6 +7,7 @@ use App\Filament\Admin\Resources\AuthorResource\RelationManagers;
 use App\Models\Author;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -34,7 +35,9 @@ class AuthorResource extends Resource
         return $table
             ->modifyQueryUsing(fn($query) => $query->withCount('books'))
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextInputColumn::make('name')
+                    ->rules(['required', 'unique:authors,name'])
+                    ->afterStateUpdated(fn() => Notification::make()->success()->title('Author name updated successfully!')->send())
                     ->searchable(),
                 Tables\Columns\TextColumn::make('books_count')
                     ->label('Book Published')
@@ -45,8 +48,7 @@ class AuthorResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

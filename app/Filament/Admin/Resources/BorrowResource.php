@@ -14,6 +14,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
@@ -151,7 +152,7 @@ class BorrowResource extends Resource
                     ->icon('heroicon-o-bars-arrow-down')
                     ->iconButton()
                     ->requiresConfirmation()
-                    ->visible(fn($record) => $record->status == BorrowStatus::RELEASED)
+                    ->visible(fn($record) => in_array($record->status, [BorrowStatus::RELEASED, BorrowStatus::EXTENDED]))
                     ->action(function (Borrow $record) {
                         BorrowService::updateStatus($record, BorrowStatus::RETURNED->value);
                         Notification::make()
@@ -220,6 +221,55 @@ class BorrowResource extends Resource
                     ->modalSubmitActionLabel('Close')
                     ->modalFooterActionsAlignment(Alignment::Right),
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return  $infolist->schema([
+            Infolists\Components\Section::make('Request Details')->schema([
+                Infolists\Components\TextEntry::make('code')
+                    ->label('Code'),
+                Infolists\Components\TextEntry::make('status')
+                    ->label('Status')
+                    ->badge(),
+                Infolists\Components\TextEntry::make('start_date')
+                    ->dateTime()
+                    ->label('Start Date'),
+                Infolists\Components\TextEntry::make('due_date')
+                    ->dateTime()
+                    ->label('Due Date'),
+
+                Infolists\Components\Section::make('Books')
+                    ->schema([
+                        Infolists\Components\RepeatableEntry::make('books')
+
+                            ->hiddenLabel()
+                            ->schema([
+                                Infolists\Components\TextEntry::make('title'),
+                                Infolists\Components\TextEntry::make('authors')
+                                    ->formatStateUsing(fn($record) => $record->authorsName),
+                                Infolists\Components\TextEntry::make('category.name'),
+                                Infolists\Components\TextEntry::make('tags.name')
+                                    ->badge()
+                                    ->getStateUsing(fn($record) => $record->tagsName)
+                            ])->columns(4)
+                    ])
+            ])->columnSpan(3)
+                ->columns(4),
+            Infolists\Components\Section::make('Borrower')
+                ->schema([
+
+                    Infolists\Components\TextEntry::make('user.name')
+                        ->label('Name'),
+                    Infolists\Components\TextEntry::make('user.course.name')
+                        ->label('Course'),
+                    Infolists\Components\TextEntry::make('user.yearLevel.name')
+                        ->label('Level'),
+
+
+                ])->columnSpan(1)
+
+        ])->columns(4);
     }
 
     public static function getRelations(): array

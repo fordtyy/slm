@@ -15,10 +15,7 @@ class ExtensionService
         if ($status === ExtensionStatus::APPROVED->value) {
             $borrow =  $extension->borrow;
 
-            $borrow->update([
-                'due_date' => $borrow->due_date->addWeekdays($extension->number_of_days),
-                'status' => BorrowStatus::EXTENDED
-            ]);
+            BorrowService::updateStatus($borrow, BorrowStatus::EXTENDED->value, $extension->number_of_days->value);
         }
 
         $extension->update($data);

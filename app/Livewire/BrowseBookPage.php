@@ -9,6 +9,8 @@ use App\Models\BookBorrow;
 use App\Models\BookUser;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Models\User;
+use App\Services\BorrowService;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
@@ -16,6 +18,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -58,7 +62,7 @@ class BrowseBookPage extends Component implements HasForms, HasActions
             ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
                 $query->whereIn('tag_id', $value);
             }))
-            ->where('copies', '>' , 0)
+            ->where('copies', '>', 0)
             ->whereNotIn('id', $bookBorrows)
             ->paginate(12);
     }
@@ -85,9 +89,25 @@ class BrowseBookPage extends Component implements HasForms, HasActions
         BookBorrow::create(['book_id' => $this->borrow_temp, 'borrow_id' => $record->id]);
         $this->closeModal();
         Notification::make()
-            ->title('Borrow Successfully!')
+            ->title('New Borrow Created!')
             ->success()
+            ->actions([
+                Action::make('view_student')
+                    ->hidden(fn() => Auth::user()->type === 'admin')
+                    ->url(fn() => route('filament.account.resources.borrows.view', $record))
+                    ->label('View Request')
+            ])
+            ->sendToDatabase(Auth::user())
             ->send();
+        Notification::make()
+            ->title('New Borrow Created!')
+            ->success()
+            ->actions([
+                Action::make('view_admin')
+                    ->label('View Request')
+                    ->url(fn() => route('filament.admin.resources.borrows.view', $record)),
+            ])
+            ->sendToDatabase(User::where('type', 'admin')->first());
     }
 
     public function borrowBook(Book $book)

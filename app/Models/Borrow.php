@@ -59,7 +59,8 @@ class Borrow extends Model
      */
     public function books(): BelongsToMany
     {
-        return $this->belongsToMany(Book::class);
+        return $this->belongsToMany(Book::class)
+            ->using(BookBorrow::class);
     }
 
     /**
@@ -73,16 +74,6 @@ class Borrow extends Model
     }
 
     /**
-     * Get all of the bookborrow for the Borrow
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function bookborrows(): HasMany
-    {
-        return $this->hasMany(BookBorrow::class);
-    }
-
-    /**
      * Get the extension associated with the Borrow
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -90,6 +81,11 @@ class Borrow extends Model
     public function extension(): HasOne
     {
         return $this->hasOne(Extension::class);
+    }
+
+    public function dateLogs(): HasMany
+    {
+        return $this->hasMany(DateLog::class);
     }
 
     public function canBeExtended(): bool

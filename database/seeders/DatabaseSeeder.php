@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-         $this->call([
+        $this->call([
             CategorySeeder::class,
             AuthorSeeder::class,
             TagSeeder::class,
@@ -23,6 +23,6 @@ class DatabaseSeeder extends Seeder
             YearLevelSeeder::class,
             CourseSeeder::class,
             UserSeeder::class,
-            ]);
+        ]);
     }
 }

@@ -13,12 +13,14 @@ use App\Services\BorrowService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -59,6 +61,12 @@ class BorrowResource extends Resource
                     ->options(BorrowStatus::class)
                     ->native(false)
             ])
+            ->defaultGroup(
+                Group::make('status')
+                    ->collapsible()
+                    ->getTitleFromRecordUsing(fn($record) => $record->status->getTitle())
+                    ->getDescriptionFromRecordUsing(fn($record) => $record->status->description())
+            )
             ->actions([
                 Tables\Actions\Action::make('Cancel')
                     ->visible(fn($record) => $record->status->value == 'Pending')
@@ -123,8 +131,44 @@ class BorrowResource extends Resource
                     ])
                     ->modalCancelAction(false)
                     ->modalSubmitActionLabel('Close')
-                    ->modalFooterActionsAlignment(Alignment::Right)
+                    ->modalFooterActionsAlignment(Alignment::Right),
+                Tables\Actions\ViewAction::make()
             ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return  $infolist->schema([
+
+            Infolists\Components\TextEntry::make('code')
+                ->label('Code'),
+            Infolists\Components\TextEntry::make('status')
+                ->label('Status')
+                ->badge(),
+            Infolists\Components\TextEntry::make('start_date')
+                ->dateTime()
+                ->label('Start Date'),
+            Infolists\Components\TextEntry::make('due_date')
+                ->dateTime()
+                ->label('Due Date'),
+
+            Infolists\Components\Section::make('Books')
+                ->schema([
+                    Infolists\Components\RepeatableEntry::make('books')
+
+                        ->hiddenLabel()
+                        ->schema([
+                            Infolists\Components\TextEntry::make('title'),
+                            Infolists\Components\TextEntry::make('authors')
+                                ->formatStateUsing(fn($record) => $record->authorsName),
+                            Infolists\Components\TextEntry::make('category.name'),
+                            Infolists\Components\TextEntry::make('tags.name')
+                                ->badge()
+                                ->getStateUsing(fn($record) => $record->tagsName)
+                        ])->columns(4)
+                ])
+
+        ])->columns(4);
     }
 
     public static function getRelations(): array
@@ -139,6 +183,7 @@ class BorrowResource extends Resource
         return [
             'index' => Pages\ListBorrows::route('/'),
             'create' => Pages\CreateBorrow::route('/create'),
+            'view' => Pages\ViewBorrow::route('/{record}'),
             'edit' => Pages\EditBorrow::route('/{record}/edit'),
         ];
     }
