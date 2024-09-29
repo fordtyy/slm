@@ -7,6 +7,8 @@ use App\Events\BorrowApproved;
 use App\Events\BorrowReleased;
 use App\Events\BorrowStatusUpdate;
 use App\Mail\BorrowRequestDueDateReminderMail;
+use App\Models\Book;
+use App\Models\BookBorrow;
 use App\Models\Borrow;
 use Filament\Notifications;
 use Filament\Notifications\Notification;
@@ -40,6 +42,16 @@ class BorrowService
         }
 
         $borrow->update($data);
+
+        if ($status === BorrowStatus::RELEASED->value) {
+          $book = BookBorrow::where("borrow_id", $borrow->id)->first();
+          Book::where('id', $book->book_id)->decrement('copies');
+        }
+
+        if ($status === BorrowStatus::RETURNED->value) {
+          $book = BookBorrow::where("borrow_id", $borrow->id)->first();
+          Book::where('id', $book->book_id)->increment('copies');
+        }
 
         // Trigger an event that will send an email notification to borrower.
         BorrowStatusUpdate::dispatch($borrow);

@@ -2,25 +2,24 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\BorrowStatus;
 use App\Enums\Status;
 use App\Filament\Admin\Resources\BookResource\Pages;
 use App\Filament\Admin\Resources\BookResource\RelationManagers;
 use App\Models\Book;
+use App\Models\BookBorrow;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Infolist;
 use Filament\Infolists;
 use Filament\Resources\Resource;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Notifications\Actions\Action;
-use Filament\Notifications\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
 
 class BookResource extends Resource
 {
@@ -34,6 +33,7 @@ class BookResource extends Resource
             ->schema([
                 Forms\Components\Group::make([
                     Forms\Components\FileUpload::make('cover')
+                        ->required()
                         ->columnspan(1),
                     Forms\Components\TextInput::make('isbn')
                         ->label('ISBN')
@@ -122,6 +122,7 @@ class BookResource extends Resource
                 Tables\Columns\TextColumn::make('category.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('tags.name')
+                    // ->badge()
                     ->searchable(),
             ])
             ->filters([
@@ -135,7 +136,21 @@ class BookResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                  ->before(function ($record, Tables\Actions\DeleteAction $action) {
+                    $book_borrow = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn('status', [BorrowStatus::PENDING, BorrowStatus::APPROVED, BorrowStatus::RELEASED]))
+                      ->where('book_id', $record->id)
+                      ->get();
+
+                    if (count($book_borrow) != 0 && count($book_borrow) > 0) {
+                      // Cancel the delete action
+                      Notification::make()
+                        ->title('Deletion cancelled: There are existing borrow transactions for this book.')
+                        ->warning()
+                        ->send();
+                      $action->cancel();
+                    }
+                  })
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
