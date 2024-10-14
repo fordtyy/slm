@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
+use Filament\Http\Responses\Auth\Contracts\EmailVerificationResponse;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             RegistrationResponse::class,
             \App\Http\Responses\RegistrationResponse::class
+        );
+        $this->app->singleton(
+          EmailVerificationResponse::class, 
+          \App\Http\Responses\EmailVerificationResponse::class
         );
     }
 

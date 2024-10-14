@@ -5,6 +5,7 @@ namespace App\Filament\Account\Resources;
 use App\Filament\Account\Resources\WishlistResource\Pages;
 use App\Models\BookUser;
 use Filament\Forms\Form;
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
@@ -12,6 +13,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Build;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
 
 class WishlistResource extends Resource
 {
@@ -73,5 +75,10 @@ class WishlistResource extends Resource
         return [
             'index' => Pages\ListWishlists::route('/'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+      return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
     }
 }

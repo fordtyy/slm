@@ -21,7 +21,7 @@ class LoginResponse extends \Filament\Http\Responses\Auth\LoginResponse
         }
  
         if (Filament::auth()->user()->type === 'student') {
-            return redirect('/account');
+            return redirect('/account/dashboard');
         }
  
         return parent::toResponse($request);

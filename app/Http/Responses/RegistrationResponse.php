@@ -18,7 +18,7 @@ class RegistrationResponse extends \Filament\Http\Responses\Auth\RegistrationRes
         }
  
         if (Filament::auth()->user()->type === 'student') {
-            return redirect('/account');
+            return redirect('/auth/email-verification/prompt');
         }
  
         return parent::toResponse($request);

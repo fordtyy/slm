@@ -11,6 +11,7 @@ use App\Models\Extension;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
@@ -18,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
 
 class ExtensionResource extends Resource
 {
@@ -125,5 +127,10 @@ class ExtensionResource extends Resource
         return [
             'index' => Pages\ListExtensions::route('/'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+      return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
     }
 }
