@@ -11,8 +11,10 @@ use App\Models\Category;
 use App\Models\Tag;
 use App\Models\User;
 use App\Services\BorrowService;
+use Exception;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -21,6 +23,9 @@ use Filament\Forms\Form;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Actions\ActionGroup;
 use Filament\Notifications\Notification;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -46,25 +51,71 @@ class BrowseBookPage extends Component implements HasForms, HasActions
         return view('livewire.browse-book-page');
     }
 
+    public function getUser(): Authenticatable & Model
+  {
+      $user = Filament::auth()->user();
+
+      if (!$user instanceof Model) {
+          throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
+      }
+
+      return $user;
+  }
+
     #[Computed]
     public function books()
     {
-        $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn('status', [BorrowStatus::PENDING, BorrowStatus::APPROVED, BorrowStatus::RELEASED, BorrowStatus::EXTENDED])
-            ->where('user_id', Auth::id()))
-            ->pluck('book_id');
+      $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn('status', 
+      [
+        BorrowStatus::PENDING, 
+        BorrowStatus::APPROVED, 
+        BorrowStatus::RELEASED, 
+        BorrowStatus::EXTENDED
+      ])
+      ->where('user_id', Auth::id()))
+      ->pluck('book_id');
 
 
-        return Book::when($this->data['title'], fn($query, $value) => $query->where('title', 'like', '%' . $value . '%'))
-            ->when($this->data['category'], fn($query, $value) => $query->whereIn('category_id', $value))
-            ->when($this->data['authors'], fn($query, $value) => $query->whereHas('authors', function ($query) use ($value) {
-                $query->whereIn('author_id', $value);
-            }))
-            ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
-                $query->whereIn('tag_id', $value);
-            }))
-            ->where('copies', '>', 0)
-            ->whereNotIn('id', $bookBorrows)
-            ->paginate(12);
+        $books = Book::when($this->data['title'], fn($query, $value) => $query->where('title', 'like', '%' . $value . '%'))
+          ->when($this->data['category'], fn($query, $value) => $query->whereIn('category_id', $value))
+          ->when($this->data['authors'], fn($query, $value) => $query->whereHas('authors', function ($query) use ($value) {
+              $query->whereIn('author_id', $value);
+          }))
+          ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
+              $query->whereIn('tag_id', $value);
+          }))
+          ->where('copies', '>', 0)
+          ->whereNotIn('id', $bookBorrows)
+          ->get();
+
+        $preferredCategoryIds = $this->getUser()->categoryPrefs()->pluck('categories.id')->toArray();
+        $preferredAuthorIds = $this->getUser()->authorPrefs()->pluck('authors.id')->toArray();
+
+        // manual sort the books based on user's preferences
+        $sortedBooks = $books->sortBy(function($book) use ($preferredAuthorIds, $preferredCategoryIds) {
+          $authorPriority = in_array($book->authors->first()->id, $preferredAuthorIds) ? 1 : 2; // 1 is book has an author that is preferred while 2 is not
+          $categoryPriority = in_array($book->category_id, $preferredCategoryIds) ? 1 : 2; // 1 is book has category that is preferred while 2 is not
+          
+          // how the book should be prioritized, the lower resuult is the more prioritized
+          return $authorPriority * 10 + $categoryPriority;
+        });
+
+        // Paginate manually
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 12;
+        $offset = ($currentPage - 1) * $perPage; 
+        $itemsForCurrentPage = $sortedBooks->slice($offset, $perPage);
+
+        $paginatedBooks = new LengthAwarePaginator(
+            $itemsForCurrentPage,   
+            $sortedBooks->count(),  
+            $perPage,               
+            $currentPage,           
+            ['path' => LengthAwarePaginator::resolveCurrentPath()] 
+        );
+
+        return $paginatedBooks;
+
     }
 
     public function addToWishList(Book $book)
