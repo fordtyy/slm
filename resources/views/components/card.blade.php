@@ -8,21 +8,31 @@
                 <div class="relative group">
                     <h5 id="book-title-{{ $book->id }}"
                         class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white truncate"
-                        onmousemove="checkOverflow(event, '{{ $book->title }}', {{ $book->id }})"
-                        onmouseleave="hideTooltip({{ $book->id }})">
+                        onmousemove="checkOverflow(event, '{{ $book->title }}', {{ $book->id }}, true)"
+                        onmouseleave="hideTooltip({{ $book->id }}, true)">
                         {{ $book->title }}
                     </h5>
 
-                    <div id="tooltip-{{ $book->id }}"
+                    <div id="tooltip-book-{{ $book->id }}"
                         class="absolute hidden px-4 py-2 bg-gray-800 text-white text-sm rounded-md shadow-lg whitespace-nowrap z-50 pointer-events-none">
                         {{ $book->title }}
                     </div>
                 </div>
-                <div class="mb-1">Tags:</div>
-                <div class="flex gap-3 mb-3">
-                    @foreach ($book->tags as $tag)
-                        <x-filament::badge>{{ $tag->name }}</x-filament::badge>
-                    @endforeach
+                <div>
+                    <div class="mb-1">Authors:</div>
+                    <div class="flex gap-3 mb-3">
+                        @foreach ($book->authors()->get() as $author)
+                          <x-filament::badge>{{ $author->name }}</x-filament::badge>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-1">Tags:</div>
+                    <div class="flex gap-3 mb-3">
+                        @foreach ($book->tags as $tag)
+                            <x-filament::badge>{{ $tag->name }}</x-filament::badge>
+                        @endforeach
+                    </div>
                 </div>
             </div>
             <div class="grid grid-cols-6 gap-2">
@@ -43,22 +53,26 @@
 </div>
 
 <script>
-    function checkOverflow(event, title, id) {
-        const titleElement = document.getElementById('book-title-' + id);
+    function checkOverflow(event, title, id, isBook) {
+        const titleElement = isBook ? document.getElementById('book-title-' + id) : document.getElementById('author-name-' + id);
         const isOverflowing = titleElement.scrollWidth > titleElement.clientWidth;
-        if (isOverflowing) {
-            showTooltip(event, title, id);
+        if(!isBook) {
+            showTooltip(event, title, id, isBook);
+        } else {
+          if (isOverflowing) {
+            showTooltip(event, title, id, isBook);
+          }
         }
     }
 
-    function showTooltip(event, title, id) {
-        const tooltip = document.getElementById('tooltip-' + id);
-        tooltip.style.top = (document.getElementById('book-title-' + id).offsetTop - 40) + 'px';
+    function showTooltip(event, title, id, isBook) {
+        const tooltip = isBook ? document.getElementById('tooltip-book-' + id) : document.getElementById('tooltip-author-' + id);
+        tooltip.style.top = isBook ? (document.getElementById('book-title-' + id).offsetTop - 40) + 'px' : (document.getElementById('author-name-' + id).offsetTop - 40) + 'px';
         tooltip.classList.remove('hidden');
     }
 
-    function hideTooltip(id) {
-        const tooltip = document.getElementById(`tooltip-${id}`);
+    function hideTooltip(id, isBook) {
+        const tooltip = isBook ? document.getElementById('tooltip-book-' + id) : document.getElementById('tooltip-author-' + id);
         tooltip.classList.add('hidden');
     }
 </script>
