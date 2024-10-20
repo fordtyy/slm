@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserType;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -32,7 +33,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'course_id',
         'year_level_id',
         'usn',
-        'email_verified_at'
+        'email_verified_at',
+        'blocked_at'
     ];
 
     /**
@@ -55,6 +57,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'type' => UserType::class,
+            'blocked_at' => 'datetime'
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserType;
 use Closure;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class AccountMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (Filament::auth() && Filament::auth()->user()->type === 'student') 
+        if (Filament::auth() && Filament::auth()->user()->type === UserType::STUDENT)
         {
             return $next($request);
         }
