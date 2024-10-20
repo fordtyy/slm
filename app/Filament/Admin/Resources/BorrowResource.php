@@ -23,6 +23,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,9 +31,19 @@ class BorrowResource extends Resource
 {
     protected static ?string $model = Borrow::class;
 
+    protected static ?string $recordTitleAttribute = 'code';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationGroup = 'Requests';
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Borrower' => $record->user->name,
+            'Requested On' => $record->created_at->diffForHumans()
+        ];
+    }
 
     public static function form(Form $form): Form
     {

@@ -2,16 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Pages\Dashboard;
+use App\Filament\Admin\Widgets\PendingBorrowRequest;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
+use Filament\Support\Facades\FilamentView;
+use Filament\Tables\View\TablesRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -38,19 +40,16 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                Dashboard::class
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label('My Profile')
-                    ->url(fn (): string => EditProfilePage::getUrl())
+                    ->url(fn(): string => EditProfilePage::getUrl())
                     ->icon('heroicon-o-user'),
             ])
+            ->globalSearch()
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
-            ])
             ->plugins([
                 FilamentEditProfilePlugin::make()
                     ->customProfileComponents([
@@ -78,5 +77,16 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->databaseNotifications()
             ->viteTheme('resources/css/filament/admin/theme.css');
+    }
+
+    public function boot()
+    {
+        FilamentView::registerRenderHook(
+            TablesRenderHook::TOOLBAR_GROUPING_SELECTOR_BEFORE,
+            fn() => '<h3 class="fi-ta-header-heading text-base font-semibold leading-6 text-gray-950 dark:text-white">
+                    Pending Borrow Request
+                </h3>',
+            PendingBorrowRequest::class
+        );
     }
 }

@@ -111,4 +111,14 @@ class Book extends Model
     {
         return $this->belongsToMany(User::class);
     }
+
+    /**
+     * The borrows that belong to the Book
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function borrows(): BelongsToMany
+    {
+        return $this->belongsToMany(Borrow::class);
+    }
 }
