@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Account\Pages\AccountDashboard;
 use App\Filament\Account\Pages\BrowseBooks;
 use App\Http\Middleware\AccountMiddleware;
+use App\Http\Middleware\BlockedMiddleware;
 use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
 use App\Livewire\BrowseBookPage;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -78,6 +79,7 @@ class AccountPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
                 AccountMiddleware::class,
+                BlockedMiddleware::class,
             ])
             ->databaseNotifications();
     }

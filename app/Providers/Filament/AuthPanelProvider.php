@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\Pages\Registration;
+use App\Http\Middleware\AuthMiddleware;
+use App\Http\Middleware\BlockedMiddleware;
 use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -57,6 +59,7 @@ class AuthPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
+                BlockedMiddleware::class,
             ]);
     }
 }
