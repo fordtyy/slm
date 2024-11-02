@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Borrow;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,14 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('borrows', function (Blueprint $table) {
+        Schema::create('penalties', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->string('code');
+            $table->foreignIdFor(Borrow::class)->constrained()->cascadeOnDelete();
+            $table->decimal('amount');
+            $table->string('remarks');
             $table->string('status');
-            $table->dateTime('released_date')->nullable();
-            $table->dateTime('due_date')->nullable();
-            $table->softDeletesTz();
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('borrows');
+        Schema::dropIfExists('penalties');
     }
 };

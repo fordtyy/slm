@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Enums\BorrowStatus;
-use App\Enums\Status;
 use App\Filament\Admin\Resources\BookResource\Pages;
 use App\Filament\Admin\Resources\BookResource\RelationManagers;
 use App\Models\Book;
@@ -24,8 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class BookResource extends Resource
 {
     protected static ?string $model = Book::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Book Management';
 
     public static function form(Form $form): Form
     {

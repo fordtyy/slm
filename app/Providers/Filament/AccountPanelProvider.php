@@ -10,6 +10,7 @@ use App\Http\Middleware\RedirectIfNotFilamentAuthenticated;
 use App\Livewire\BrowseBookPage;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Infolists\Infolist;
 use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -82,5 +83,9 @@ class AccountPanelProvider extends PanelProvider
                 BlockedMiddleware::class,
             ])
             ->databaseNotifications();
+    }
+
+    public function boot() {
+        Infolist::$defaultDateTimeDisplayFormat = 'M j, Y h:i A';
     }
 }

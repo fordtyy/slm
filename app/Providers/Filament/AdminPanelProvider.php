@@ -48,6 +48,10 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn(): string => EditProfilePage::getUrl())
                     ->icon('heroicon-o-user'),
             ])
+            ->navigationGroups([
+                'Requests',
+                'Book Management'
+            ])
             ->globalSearch()
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->plugins([

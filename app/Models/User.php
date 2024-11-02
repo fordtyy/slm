@@ -130,4 +130,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return $this->belongsToMany(Category::class);
     }
+
+    /**
+     * Get all of the penalties for the user
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function penalties(): HasMany
+    {
+        return $this->hasMany(Penalty::class);
+    }
 }

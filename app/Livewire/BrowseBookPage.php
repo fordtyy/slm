@@ -12,6 +12,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Services\BorrowService;
 use Exception;
+use Filament\Actions\Action as NativeAction;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Facades\Filament;
@@ -52,114 +53,131 @@ class BrowseBookPage extends Component implements HasForms, HasActions
     }
 
     public function getUser(): Authenticatable & Model
-  {
-      $user = Filament::auth()->user();
+    {
+        $user = Filament::auth()->user();
 
-      if (!$user instanceof Model) {
-          throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
-      }
+        if (!$user instanceof Model) {
+            throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
+        }
 
-      return $user;
-  }
+        return $user;
+    }
 
     #[Computed]
     public function books()
     {
-      $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn('status', 
-      [
-        BorrowStatus::PENDING, 
-        BorrowStatus::APPROVED, 
-        BorrowStatus::RELEASED, 
-        BorrowStatus::EXTENDED
-      ])
-      ->where('user_id', Auth::id()))
-      ->pluck('book_id');
+        $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn(
+            'status',
+            [
+                BorrowStatus::PENDING,
+                BorrowStatus::APPROVED,
+                BorrowStatus::RELEASED,
+                BorrowStatus::EXTENDED
+            ]
+        )
+            ->where('user_id', Auth::id()))
+            ->pluck('book_id');
 
 
         $books = Book::when($this->data['title'], fn($query, $value) => $query->where('title', 'like', '%' . $value . '%'))
-          ->when($this->data['category'], fn($query, $value) => $query->whereIn('category_id', $value))
-          ->when($this->data['authors'], fn($query, $value) => $query->whereHas('authors', function ($query) use ($value) {
-              $query->whereIn('author_id', $value);
-          }))
-          ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
-              $query->whereIn('tag_id', $value);
-          }))
-          ->where('copies', '>', 0)
-          ->whereNotIn('id', $bookBorrows)
-          ->get();
+            ->when($this->data['category'], fn($query, $value) => $query->whereIn('category_id', $value))
+            ->when($this->data['authors'], fn($query, $value) => $query->whereHas('authors', function ($query) use ($value) {
+                $query->whereIn('author_id', $value);
+            }))
+            ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
+                $query->whereIn('tag_id', $value);
+            }))
+            ->where('copies', '>', 0)
+            ->whereNotIn('id', $bookBorrows)
+            ->get();
 
         $preferredCategoryIds = $this->getUser()->categoryPrefs()->pluck('categories.id')->toArray();
         $preferredAuthorIds = $this->getUser()->authorPrefs()->pluck('authors.id')->toArray();
 
         // manual sort the books based on user's preferences
-        $sortedBooks = $books->sortBy(function($book) use ($preferredAuthorIds, $preferredCategoryIds) {
-          $authorPriority = in_array($book->authors->first()->id, $preferredAuthorIds) ? 1 : 2; // 1 is book has an author that is preferred while 2 is not
-          $categoryPriority = in_array($book->category_id, $preferredCategoryIds) ? 1 : 2; // 1 is book has category that is preferred while 2 is not
-          
-          // how the book should be prioritized, the lower resuult is the more prioritized
-          return $authorPriority * 10 + $categoryPriority;
+        $sortedBooks = $books->sortBy(function ($book) use ($preferredAuthorIds, $preferredCategoryIds) {
+            $authorPriority = in_array($book->authors->first()->id, $preferredAuthorIds) ? 1 : 2; // 1 is book has an author that is preferred while 2 is not
+            $categoryPriority = in_array($book->category_id, $preferredCategoryIds) ? 1 : 2; // 1 is book has category that is preferred while 2 is not
+
+            // how the book should be prioritized, the lower resuult is the more prioritized
+            return $authorPriority * 10 + $categoryPriority;
         });
 
         // Paginate manually
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $perPage = 12;
-        $offset = ($currentPage - 1) * $perPage; 
+        $offset = ($currentPage - 1) * $perPage;
         $itemsForCurrentPage = $sortedBooks->slice($offset, $perPage);
 
         $paginatedBooks = new LengthAwarePaginator(
-            $itemsForCurrentPage,   
-            $sortedBooks->count(),  
-            $perPage,               
-            $currentPage,           
-            ['path' => LengthAwarePaginator::resolveCurrentPath()] 
+            $itemsForCurrentPage,
+            $sortedBooks->count(),
+            $perPage,
+            $currentPage,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
         );
 
         return $paginatedBooks;
-
     }
 
-    public function addToWishList(Book $book)
+    public function addToWishListAction(): NativeAction
     {
-        Auth::user()->wishLists()->create(['book_id' => $book->id]);
-        Notification::make()
-            ->title('Added to wishlist!')
-            ->success()
-            ->send();
+        return NativeAction::make('addToWishList')
+            ->outlined()
+            ->hiddenLabel()
+            ->icon("heroicon-o-heart")
+            ->action(function (array $arguments) {
+                Auth::user()->wishLists()->create(['book_id' => $arguments['book']]);
+                Notification::make()
+                    ->title('Added to wishlist!')
+                    ->success()
+                    ->send();
+            });
     }
 
-    public function addedToWishList(Book $book): bool
+    public function addedToWishList(int $bookId): bool
     {
         return BookUser::where('user_id', Auth::id())
-            ->where('book_id', $book->id)
+            ->where('book_id', $bookId)
             ->exists();
     }
 
-    public function confirmBorrow()
+    public function borrowAction(): NativeAction
     {
-        $record = Auth::user()->borrows()->create(['user_id' => Auth::id()]);
-        BookBorrow::create(['book_id' => $this->borrow_temp, 'borrow_id' => $record->id]);
-        $this->closeModal();
-        Notification::make()
-            ->title('New Borrow Created!')
-            ->success()
-            ->actions([
-                Action::make('view_student')
-                    ->hidden(fn() => Auth::user()->type === 'admin')
-                    ->url(fn() => route('filament.account.resources.borrows.view', $record))
-                    ->label('View Request')
+        return NativeAction::make('borrow')
+            ->requiresConfirmation()
+            ->modalHeading(fn($arguments) => 'Borrow ' . Book::find($arguments['book'])->title)
+            ->modalDescription('By confirming, you agree that a 50 pesos fine wll be charged when you fail to return it
+                                before or on due date of your request.')
+            ->extraAttributes([
+                'class' => 'flex-1 text-sm card-button-borrow',
             ])
-            ->sendToDatabase(Auth::user())
-            ->send();
-        Notification::make()
-            ->title('New Borrow Created!')
-            ->success()
-            ->actions([
-                Action::make('view_admin')
-                    ->label('View Request')
-                    ->url(fn() => route('filament.admin.resources.borrows.view', $record)),
-            ])
-            ->sendToDatabase(User::where('type', 'admin')->first());
+            ->action(function (array $arguments) {
+                $record = Auth::user()->borrows()->create(['user_id' => Auth::id()]);
+                BookBorrow::create(['book_id' => $arguments['book'], 'borrow_id' => $record->id]);
+                Notification::make()
+                    ->title('New Borrow Created!')
+                    ->success()
+                    ->actions([
+                        Action::make('view_student')
+                            ->hidden(fn() => Auth::user()->type === 'admin')
+                            ->url(fn() => route('filament.account.resources.borrows.view', $record))
+                            ->label('View Request')
+                    ])
+                    ->sendToDatabase(Auth::user())
+                    ->send();
+                Notification::make()
+                    ->title('New Borrow Created!')
+                    ->success()
+                    ->actions([
+                        Action::make('view_admin')
+                            ->label('View Request')
+                            ->url(fn() => route('filament.admin.resources.borrows.view', $record)),
+                    ])
+                    ->sendToDatabase(User::where('type', 'admin')->first());
+            });
     }
+
 
     public function borrowBook(Book $book)
     {

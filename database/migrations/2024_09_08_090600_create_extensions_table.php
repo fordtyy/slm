@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('number_of_days');
             $table->string('status');
             $table->string('reason');
+            $table->decimal('fee');
 
             $table->foreignIdFor(Borrow::class)->constrained()->cascadeOnDelete();
             $table->timestamps();

@@ -16,6 +16,7 @@ enum BorrowStatus: string implements HasLabel, HasColor
     case REJECTED = 'Rejected';
     case RETURNED = 'Returned';
     case EXTENDED = 'Extended';
+    case DUE = 'Due';
 
     public function description(): string
     {
@@ -27,6 +28,7 @@ enum BorrowStatus: string implements HasLabel, HasColor
             $this::REJECTED => 'Request not approved for any reason.',
             $this::RETURNED => 'Request is successfully done.',
             $this::EXTENDED => 'Request extended by borrower',
+            $this::DUE => 'Request due, books not yet returned',
         };
     }
 
@@ -44,7 +46,8 @@ enum BorrowStatus: string implements HasLabel, HasColor
             $this::EXTENDED => 'info',
             $this::CANCEL => 'danger',
             $this::REJECTED => 'danger',
-            $this::RETURNED => 'success'
+            $this::RETURNED => 'success',
+            $this::DUE => 'warning'
         };
     }
 }

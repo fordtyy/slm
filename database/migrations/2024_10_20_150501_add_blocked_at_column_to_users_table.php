@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->date('blocked_at')->nullable();
+        Schema::table('extensions', function (Blueprint $table) {
+            $table->decimal('fee')->default(0);
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('blocked_at');
-        });
+        // Schema::table('extensions', function (Blueprint $table) {
+        //     $table->dropColumn('fee');
+        // });
     }
 };

@@ -9,7 +9,7 @@
         @endforeach
     </div>
 
-    <x-filament::modal id="borrow-modal">
+    {{-- <x-filament::modal id="borrow-modal">
         <x-slot name="heading">
             Confirmation
         </x-slot>
@@ -40,7 +40,9 @@
                 </x-filament::button>
             </div>
         </x-slot>
-    </x-filament::modal>
+    </x-filament::modal> --}}
+
+    <x-filament-actions::modals />
     <br>
     <div class="flex place-content-center">
         {{ $this->books->links() }}

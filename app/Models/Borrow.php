@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BorrowStatus;
+use App\Traits\HasPayment;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,21 +15,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Borrow extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasPayment;
 
     protected $fillable = [
         'code',
-        'start_date',
+        'released_date',
         'due_date',
         'status',
         'user_id'
     ];
 
-    protected $dates = ['due_date', 'start_date'];
+    protected $dates = ['due_date', 'released_date'];
 
     protected $casts = [
         'status' => BorrowStatus::class,
-        'start_date' => 'datetime',
+        'released_date' => 'datetime',
         'due_date' => 'datetime'
     ];
 
@@ -74,13 +75,13 @@ class Borrow extends Model
     }
 
     /**
-     * Get the extension associated with the Borrow
+     * Get the extensions associated with the Borrow
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function extension(): HasOne
+    public function extensions(): HasMany
     {
-        return $this->hasOne(Extension::class);
+        return $this->hasMany(Extension::class);
     }
 
     public function dateLogs(): HasMany
@@ -92,6 +93,16 @@ class Borrow extends Model
     {
         return $this->status == BorrowStatus::RELEASED
             && $this->due_date?->gte(now())
-            && !$this->extension()->exists();
+            && !$this->extensions()->exists();
+    }
+
+    /**
+     * Get all of the penalties for the Borrow
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function penalties(): HasMany
+    {
+        return $this->hasMany(Penalty::class);
     }
 }

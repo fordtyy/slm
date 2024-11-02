@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ExtensionDays;
 use App\Enums\ExtensionStatus;
+use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,12 +12,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Extension extends Model
 {
     use HasFactory;
+    use HasPayment;
 
     protected $fillable = [
         'number_of_days',
         'status',
         'reason',
-        'borrow_id'
+        'borrow_id',
+        'fee'
     ];
 
     protected $casts = [

@@ -58,6 +58,9 @@ class ExtensionResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('number_of_days')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('fee')
+                    ->money('PHP')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->searchable(),

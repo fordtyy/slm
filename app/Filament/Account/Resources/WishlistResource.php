@@ -68,7 +68,7 @@ class WishlistResource extends Resource
 
                         $wishlistIds = $records->pluck('id')->toArray();
                         $data = self::getBookIdsWithBookBorrowId($records, $borrowRecord);
-                    
+
                         BookBorrow::insert($data);
                         BookUser::whereIn('id', $wishlistIds)->delete();
 
@@ -121,7 +121,7 @@ class WishlistResource extends Resource
       return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
     }
 
-    public static function getBookIdsWithBookBorrowId(Collection $records, $borrowRecord): array 
+    public static function getBookIdsWithBookBorrowId(Collection $records, $borrowRecord): array
     {
         $data = $records->map(function ($item) {
             return [

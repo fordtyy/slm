@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PendingBorrowRequest extends BaseWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 4;
     protected int | string | array $columnSpan = 8;
 
     public function table(Table $table): Table

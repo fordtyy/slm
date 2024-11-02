@@ -12,7 +12,6 @@ Request Code: **{{ $borrow->code }}**
 
 ### Book(s) Details
 
-
 ---
 <x-mail::table>
 | Title | Author | Category |

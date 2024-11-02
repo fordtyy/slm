@@ -63,6 +63,10 @@ class BorrowRequestStausOverview extends BaseWidget
 
     private function isIncreasing(array $data): bool
     {
+        if(empty($data) || sizeof($data) == 1) {
+            return false;
+        }
+
         [$first, $second] =  array_slice($data, -2);
 
         if ((!$first && !$second) || ($first && !$second)) {

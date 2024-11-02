@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BorrowStatus;
+use App\Enums\PenaltyStatus;
 use App\Events\BorrowApproved;
 use App\Events\BorrowReleased;
 use App\Events\BorrowStatusUpdate;
@@ -10,6 +11,7 @@ use App\Mail\BorrowRequestDueDateReminderMail;
 use App\Models\Book;
 use App\Models\BookBorrow;
 use App\Models\Borrow;
+use Carbon\Carbon;
 use Filament\Notifications;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
@@ -31,7 +33,7 @@ class BorrowService
         if (BorrowStatus::RELEASED->value === $status) {
             $now = now();
 
-            $data['start_date'] = $now;
+            $data['released_date'] = $now;
             $data['due_date'] = $now->copy()->addWeekdays(10);
         }
 
@@ -41,17 +43,17 @@ class BorrowService
             $data['due_date'] = $date->copy()->addWeekdays($extension);
         }
 
-        $borrow->update($data);
-
         if ($status === BorrowStatus::RELEASED->value) {
-          $book = BookBorrow::where("borrow_id", $borrow->id)->first();
-          Book::where('id', $book->book_id)->decrement('copies');
+            $book = BookBorrow::where("borrow_id", $borrow->id)->first();
+            Book::where('id', $book->book_id)->decrement('copies');
         }
 
         if ($status === BorrowStatus::RETURNED->value) {
-          $book = BookBorrow::where("borrow_id", $borrow->id)->first();
-          Book::where('id', $book->book_id)->increment('copies');
+            $book = BookBorrow::where("borrow_id", $borrow->id)->first();
+            Book::where('id', $book->book_id)->increment('copies');
         }
+
+        $borrow->update($data);
 
         // Trigger an event that will send an email notification to borrower.
         BorrowStatusUpdate::dispatch($borrow);
@@ -59,33 +61,54 @@ class BorrowService
 
     public static function sendDueNotification()
     {
-        $borrows = Borrow::where('status', BorrowStatus::RELEASED)
-            ->whereDoesntHave('extension')
+        $borrows = Borrow::whereIn('status', [
+            BorrowStatus::RELEASED,
+            BorrowStatus::EXTENDED,
+            BorrowStatus::DUE,
+        ])
             ->whereNotNull('due_date')
             ->whereDoesntHave('dateLogs', fn($query) => $query->whereDate('date', now()->today()))
             ->get();
 
         $borrows->filter(
             fn($borrow) =>
-            $borrow->due_date->subWeekdays(3)->gte(now())
+            $borrow->due_date->subWeekdays(3)->gte(now()) || now()->gte($borrow->due_date)
         )
-            ->each(function ($borrow) {
-
+            ->each(function (Borrow $borrow) {
                 $borrower = $borrow->user;
 
-                Mail::to($borrower->email, $borrower->name)
-                    ->send(new BorrowRequestDueDateReminderMail($borrow));
+                if ($borrow->due_date->between($borrow->due_date, now())) {
+                    self::updateStatus($borrow, BorrowStatus::DUE->value);
 
-                Notification::make()
-                    ->info()
-                    ->title('Due Date Reminder 🕒')
-                    ->body("Borrow Request [" . $borrow->code . "] is due on " . $borrow->due_date->format('Y-m-d'))
-                    ->sendToDatabase([$borrow->user])
-                    ->actions([
-                        Notifications\Actions\Action::make('view')
-                            ->label('View Request')
-                            ->url(route('filament.account.resources.borrows.view', $borrow))
-                    ]);
+                    $penaltyData = [
+                        'user_id' => $borrower->id,
+                        'status' => PenaltyStatus::PENDING
+                    ];
+
+                    if ($borrow->penalties()->exists()) {
+                        $penaltyData['amount'] = 5;
+                        $penaltyData['remarks'] = 'Penalty extension.';
+                    } else {
+                        $penaltyData['amount'] = 50;
+                        $penaltyData['remarks'] = 'Request is due.';
+                    }
+
+                    $borrow->penalties()->create($penaltyData);
+                } else {
+                    Mail::to($borrower->email, $borrower->name)
+                        ->send(new BorrowRequestDueDateReminderMail($borrow));
+
+                    Notification::make()
+                        ->info()
+                        ->title('Due Date Reminder 🕒')
+                        ->body("Borrow Request [" . $borrow->code . "] is due on " . $borrow->due_date->format('Y-m-d'))
+                        ->sendToDatabase([$borrow->user])
+                        ->actions([
+                            Notifications\Actions\Action::make('view')
+                                ->label('View Request')
+                                ->url(route('filament.account.resources.borrows.view', $borrow))
+                        ]);
+                }
 
                 $borrow->dateLogs()->create(['date' => now()]);
             });

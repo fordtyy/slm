@@ -5,19 +5,25 @@ namespace App\Filament\Account\Resources;
 use App\Enums\BorrowStatus;
 use App\Enums\ExtensionDays;
 use App\Enums\ExtensionStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Filament\Account\Resources\BorrowResource\Pages;
 use App\Filament\Account\Resources\BorrowResource\RelationManagers;
 use App\Models\Borrow;
+use App\Models\Extension;
+use App\Models\Penalty;
 use App\Models\User;
 use App\Services\BorrowService;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Navigation\NavigationItem;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -25,26 +31,27 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\HtmlString;
 
 class BorrowResource extends Resource
 {
     protected static ?string $model = Borrow::class;
 
-    protected static ?string $navigationGroup = 'Request';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $recordTitleAttribute = 'code';
 
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->where('user_id', Auth::id()))
             ->columns([
                 Tables\Columns\TextColumn::make('code')
                     ->searchable()
                     ->label('Request Code'),
-                Tables\Columns\TextColumn::make('books.title')
-                    ->badge(),
                 Tables\Columns\TextColumn::make('status')
-                    ->color('white')
+                    ->badge()
                     ->formatStateUsing(function ($record) {
                         if ($record->status->value === 'Cancel') {
                             return 'Cancelled';
@@ -86,6 +93,7 @@ class BorrowResource extends Resource
                     ->icon('heroicon-o-folder-plus')
                     ->iconButton()
                     ->visible(fn($record) => $record->canBeExtended())
+                    ->slideOver()
                     ->form([
                         Forms\Components\ToggleButtons::make('number_of_days')
                             ->options(ExtensionDays::class)
@@ -93,11 +101,23 @@ class BorrowResource extends Resource
                             ->required(),
                         Forms\Components\Textarea::make('reason')
                             ->required(),
+                        Forms\Components\Placeholder::make('notice')
+                            ->content('By submitting, you agree that you need to pay 15 pesos fee multiply
+                                         to the number of days you want to extend your request.')
                     ])
+                    ->modalWidth(MaxWidth::Large)
+                    ->modalFooterActionsAlignment(Alignment::Right)
                     ->action(function (array $data, Borrow $record) {
                         $data['status'] = ExtensionStatus::PENDING;
 
-                        $extension = $record->extension()->create($data);
+                        $data['fee'] = $data['number_of_days'] * 15;
+
+                        $extension = $record->extensions()->create($data);
+
+                        $extension->payment()->create([
+                            'amount' => $extension->fee,
+                            'status' => PaymentStatus::PENDING
+                        ]);
 
                         Notification::make()
                             ->success()
@@ -115,7 +135,7 @@ class BorrowResource extends Resource
                 Tables\Actions\Action::make('view_request_extension')
                     ->icon('heroicon-o-folder-open')
                     ->iconButton()
-                    ->visible(fn($record) => $record->extension()->exists())
+                    ->visible(fn($record) => $record->extensions()->exists())
                     ->infolist([
                         Infolists\Components\TextEntry::make('extension.code')
                             ->label('Code')
@@ -127,10 +147,17 @@ class BorrowResource extends Resource
                             ->label('Status')
                             ->inlineLabel()
                             ->badge(),
+                        Infolists\Components\TextEntry::make('extension.fee')
+                            ->label('Fee')
+                            ->inlineLabel()
+                            ->money('PHP'),
                         Infolists\Components\TextEntry::make('extension.reason')
                             ->inlineLabel()
                             ->label('Reason'),
                     ])
+                    ->modalWidth(MaxWidth::Large)
+                    ->slideOver()
+                    ->modalHeading('View Request Extension Details')
                     ->modalCancelAction(false)
                     ->modalSubmitActionLabel('Close')
                     ->modalFooterActionsAlignment(Alignment::Right),
@@ -141,24 +168,51 @@ class BorrowResource extends Resource
     public static function infolist(Infolist $infolist): Infolist
     {
         return  $infolist->schema([
+            Infolists\Components\Section::make('Penalties')
+                ->visible(fn($record) => $record->penalties()->exists())
+                ->description('List of penalties of this requested.')
+                ->aside()
+                ->schema([
+                    Infolists\Components\RepeatableEntry::make('penalties')
+                        ->hiddenLabel()
+                        ->schema([
+                            Infolists\Components\TextEntry::make('created_at')
+                                ->label('Charge On')
+                                ->dateTime(),
+                            Infolists\Components\TextEntry::make('amount'),
+                            Infolists\Components\TextEntry::make('status')->badge(),
+                            Infolists\Components\TextEntry::make('remarks'),
 
-            Infolists\Components\TextEntry::make('code')
-                ->label('Code'),
-            Infolists\Components\TextEntry::make('status')
-                ->label('Status')
-                ->badge(),
-            Infolists\Components\TextEntry::make('start_date')
-                ->dateTime()
-                ->label('Start Date'),
-            Infolists\Components\TextEntry::make('due_date')
-                ->dateTime()
-                ->label('Due Date'),
+                        ])->columns(4)
 
+                ]),
+            Infolists\Components\Section::make('Details')
+                ->description('Information of this request')
+                ->collapsible()
+                ->schema([
+                    Infolists\Components\TextEntry::make('code')
+                        ->inlineLabel()
+                        ->label('Code'),
+                    Infolists\Components\TextEntry::make('status')
+                        ->inlineLabel()
+                        ->label('Status')
+                        ->badge(),
+                    Infolists\Components\TextEntry::make('released_date')
+                        ->inlineLabel()
+                        ->dateTime()
+                        ->label('Released Date'),
+                    Infolists\Components\TextEntry::make('due_date')
+                        ->inlineLabel()
+                        ->dateTime()
+                        ->label('Due Date'),
+                ]),
             Infolists\Components\Section::make('Books')
+                ->description('List of books of this request')
+                ->collapsible()
                 ->schema([
                     Infolists\Components\RepeatableEntry::make('books')
-
                         ->hiddenLabel()
+                        ->contained(false)
                         ->schema([
                             Infolists\Components\TextEntry::make('title'),
                             Infolists\Components\TextEntry::make('authors')
@@ -168,9 +222,60 @@ class BorrowResource extends Resource
                                 ->badge()
                                 ->getStateUsing(fn($record) => $record->tagsName)
                         ])->columns(4)
-                ])
+                ]),
+            Infolists\Components\Section::make('Extensions')
+                ->description('List of extensions requested.')
+                ->visible(fn(Borrow $record): bool => $record->extensions()->exists())
+                ->collapsible()
+                ->schema([
+                    Infolists\Components\RepeatableEntry::make('extensions')
+                        ->hiddenLabel()
+                        ->schema([
+                            Infolists\Components\TextEntry::make('code'),
+                            Infolists\Components\TextEntry::make('number_of_days'),
+                            Infolists\Components\TextEntry::make('status')->badge(),
+                            Infolists\Components\TextEntry::make('reason'),
+                            Infolists\Components\Actions::make([
+                                Infolists\Components\Actions\Action::make('pay_extension')
+                                    ->label('Pay Extension')
+                                    ->visible(fn($record) => $record->payment?->status === PaymentStatus::PENDING)
+                                    ->form([
+                                        Forms\Components\Group::make([
+                                            Forms\Components\Group::make([
+                                                Forms\Components\TextInput::make('amount')
+                                                    ->label('Amount')
+                                                    ->default(fn($record) => $record->fee)
+                                                    ->prefix('P')
+                                                    ->numeric(),
+                                                Forms\Components\ToggleButtons::make('method')
+                                                    ->label('Payment Method')
+                                                    ->options(PaymentMethod::class)
+                                                    ->inline()
+                                                    ->live(),
 
-        ])->columns(4);
+                                                Forms\Components\FileUpload::make('supporting_document')
+                                                    ->required()
+                                                    ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
+                                                    ->label('Supporting Document'),
+                                            ]),
+                                            Forms\Components\Placeholder::make('qr_code')
+                                                ->label('Qr Code')
+                                                ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
+                                                ->content(new HtmlString("<img src='/images/qr_code.jpg' class='w-1/2' alt='QR Code'/>")),
+                                        ])->columns(),
+                                    ])
+                                    ->action(function (array $data, Extension $record) {
+                                        $data['paid_at'] = now();
+                                        $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
+
+                                        $record->payment()->update($data);
+                                    }),
+                            ]),
+                        ])
+                        ->columns(5)
+
+                ]),
+        ]);
     }
 
     public static function getRelations(): array
@@ -192,6 +297,6 @@ class BorrowResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-      return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
+        return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
     }
 }

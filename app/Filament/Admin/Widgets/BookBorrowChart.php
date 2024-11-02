@@ -46,7 +46,7 @@ class BookBorrowChart extends ChartWidget
                         'data' => $this->getSalesPerMonth($data->borrows()
                             ->whereYear('borrows.created_at', $this->filter)
                             ->selectRaw('DATE(borrows.created_at) as date, borrows.created_at, COUNT(*) as total')
-                            ->groupBy('date')
+                            ->groupByRaw("STRFTIME('%m-%Y', borrows.created_at)")
                             ->get())
 
                     ];

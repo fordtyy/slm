@@ -74,7 +74,7 @@ class BorrowResource extends Resource
                     ->label('Borrower')
                     ->description(fn(Borrow $record) => $record->user->yearLevelAndCourse),
 
-                Tables\Columns\TextColumn::make('start_date')
+                Tables\Columns\TextColumn::make('released_date')
                     ->dateTime('M j, h:i A'),
                 Tables\Columns\TextColumn::make('due_date')
                     ->dateTime('M j, h:i A'),
@@ -193,7 +193,7 @@ class BorrowResource extends Resource
                     ->action(function (array $data, Borrow $record) {
                         $data['status'] = ExtensionStatus::PENDING;
 
-                        $record->extension()->create($data);
+                        $record->extensions()->create($data);
 
                         Notification::make()
                             ->success()
@@ -211,7 +211,7 @@ class BorrowResource extends Resource
                 Tables\Actions\Action::make('view_request_extension')
                     ->icon('heroicon-o-folder-open')
                     ->iconButton()
-                    ->visible(fn($record) => $record->extension()->exists())
+                    ->visible(fn($record) => $record->extensions()->exists())
                     ->infolist([
 
                         Infolists\Components\TextEntry::make('extension.code')
@@ -243,9 +243,9 @@ class BorrowResource extends Resource
                 Infolists\Components\TextEntry::make('status')
                     ->label('Status')
                     ->badge(),
-                Infolists\Components\TextEntry::make('start_date')
+                Infolists\Components\TextEntry::make('released_date')
                     ->dateTime()
-                    ->label('Start Date'),
+                    ->label('Released Date'),
                 Infolists\Components\TextEntry::make('due_date')
                     ->dateTime()
                     ->label('Due Date'),
