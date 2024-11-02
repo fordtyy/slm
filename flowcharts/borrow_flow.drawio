@@ -1,0 +1,33 @@
+<mxfile host="65bd71144e">
+    <diagram id="EVoHg8wmrYgNQXRIbI6g" name="Borrow Process">
+        <mxGraphModel dx="940" dy="486" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="VIM0gW2rXRsGUSsuE4Ok-3" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="VIM0gW2rXRsGUSsuE4Ok-1" target="VIM0gW2rXRsGUSsuE4Ok-2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="VIM0gW2rXRsGUSsuE4Ok-1" value="Start" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_2;whiteSpace=wrap;" vertex="1" parent="1">
+                    <mxGeometry x="70" y="200" width="100" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="VIM0gW2rXRsGUSsuE4Ok-5" style="edgeStyle=none;html=1;" edge="1" parent="1" source="VIM0gW2rXRsGUSsuE4Ok-2" target="VIM0gW2rXRsGUSsuE4Ok-4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="VIM0gW2rXRsGUSsuE4Ok-2" value="Select books" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+                    <mxGeometry x="70" y="360" width="100" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="VIM0gW2rXRsGUSsuE4Ok-4" value="Confirm selected books" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+                    <mxGeometry x="70" y="520" width="100" height="100" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="7T4NZOfhC1rEHGdUCphO" name="Schedule Task">
+        <mxGraphModel dx="658" dy="340" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

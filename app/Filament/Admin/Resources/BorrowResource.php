@@ -5,14 +5,18 @@ namespace App\Filament\Admin\Resources;
 use App\Enums\BorrowStatus;
 use App\Enums\ExtensionDays;
 use App\Enums\ExtensionStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Filament\Admin\Resources\BorrowResource\Pages;
 use App\Filament\Admin\Resources\BorrowResource\RelationManagers;
 use App\Models\Borrow;
+use App\Models\Extension;
 use App\Services\BorrowService;
 use Filament\Forms;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
@@ -26,6 +30,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class BorrowResource extends Resource
 {
@@ -143,7 +148,7 @@ class BorrowResource extends Resource
                     ->icon('heroicon-o-bars-arrow-up')
                     ->iconButton()
                     ->requiresConfirmation()
-                    ->visible(fn($record) => $record->status == BorrowStatus::APPROVED)
+                    ->visible(fn($record) => in_array($record->status, [BorrowStatus::APPROVED, BorrowStatus::PENDING]))
                     ->action(function (Borrow $record) {
                         BorrowService::updateStatus($record, BorrowStatus::RELEASED->value);
                         Notification::make()
@@ -208,77 +213,170 @@ class BorrowResource extends Resource
                             ->sendToDatabase(Auth::user())
                             ->send();
                     }),
-                Tables\Actions\Action::make('view_request_extension')
-                    ->icon('heroicon-o-folder-open')
-                    ->iconButton()
-                    ->visible(fn($record) => $record->extensions()->exists())
-                    ->infolist([
-
-                        Infolists\Components\TextEntry::make('extension.code')
-                            ->label('Code')
-                            ->inlineLabel(),
-                        Infolists\Components\TextEntry::make('extension.number_of_days')
-                            ->label('Number of Days')
-                            ->inlineLabel(),
-                        Infolists\Components\TextEntry::make('extension.status')
-                            ->label('Status')
-                            ->inlineLabel()
-                            ->badge(),
-                        Infolists\Components\TextEntry::make('extension.reason')
-                            ->inlineLabel()
-                            ->label('Reason')
-                    ])
-                    ->modalCancelAction(false)
-                    ->modalSubmitActionLabel('Close')
-                    ->modalFooterActionsAlignment(Alignment::Right),
             ]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return  $infolist->schema([
-            Infolists\Components\Section::make('Request Details')->schema([
-                Infolists\Components\TextEntry::make('code')
-                    ->label('Code'),
-                Infolists\Components\TextEntry::make('status')
-                    ->label('Status')
-                    ->badge(),
-                Infolists\Components\TextEntry::make('released_date')
-                    ->dateTime()
-                    ->label('Released Date'),
-                Infolists\Components\TextEntry::make('due_date')
-                    ->dateTime()
-                    ->label('Due Date'),
-
-                Infolists\Components\Section::make('Books')
-                    ->schema([
-                        Infolists\Components\RepeatableEntry::make('books')
-
-                            ->hiddenLabel()
-                            ->schema([
-                                Infolists\Components\TextEntry::make('title'),
-                                Infolists\Components\TextEntry::make('authors')
-                                    ->formatStateUsing(fn($record) => $record->authorsName),
-                                Infolists\Components\TextEntry::make('category.name'),
-                                Infolists\Components\TextEntry::make('tags.name')
-                                    ->badge()
-                                    ->getStateUsing(fn($record) => $record->tagsName)
-                            ])->columns(4)
-                    ])
-            ])->columnSpan(3)
-                ->columns(4),
-            Infolists\Components\Section::make('Borrower')
+            Infolists\Components\Section::make('Penalties')
+                ->visible(fn($record) => $record->penalties()->exists())
+                ->description('List of penalties of this requested.')
+                ->aside()
                 ->schema([
+                    Infolists\Components\RepeatableEntry::make('penalties')
+                        ->hiddenLabel()
+                        ->schema([
+                            Infolists\Components\TextEntry::make('created_at')
+                                ->label('Charge On')
+                                ->dateTime(),
+                            Infolists\Components\TextEntry::make('amount'),
+                            Infolists\Components\TextEntry::make('status')->badge(),
+                            Infolists\Components\TextEntry::make('remarks'),
 
-                    Infolists\Components\TextEntry::make('user.name')
-                        ->label('Name'),
-                    Infolists\Components\TextEntry::make('user.course.name')
-                        ->label('Course'),
-                    Infolists\Components\TextEntry::make('user.yearLevel.name')
-                        ->label('Level'),
+                        ])->columns(4)
 
+                ]),
+            Infolists\Components\Section::make('Request Details')
+                ->schema([
+                    Infolists\Components\TextEntry::make('code')
+                        ->label('Code'),
+                    Infolists\Components\TextEntry::make('status')
+                        ->label('Status')
+                        ->badge(),
+                    Infolists\Components\TextEntry::make('released_date')
+                        ->dateTime()
+                        ->label('Released Date'),
+                    Infolists\Components\TextEntry::make('due_date')
+                        ->dateTime()
+                        ->label('Due Date'),
 
-                ])->columnSpan(1)
+                    Infolists\Components\TextEntry::make('borrower')
+                        ->label('Borrower')
+                        ->getStateUsing(fn($record) => $record->user->name)
+                        ->tooltip(fn($record) => $record->user->yearLevelAndCourse)
+                        ->hintAction(
+                            fn(Borrow $record) =>
+                            Infolists\Components\Actions\Action::make('view_info')
+                                ->label('Borrower Info')
+                                ->icon('heroicon-o-information-circle')
+                                ->iconButton()
+                                ->infolist([
+                                    Infolists\Components\Group::make([
+                                        Infolists\Components\TextEntry::make('name')
+                                            ->state($record->user->name)
+                                            ->suffix(" ({$record->user->yearLevelAndCourse})"),
+                                        Infolists\Components\TextEntry::make('penalties')
+                                            ->state("Total: " . $record->penalties()->count())
+                                    ])->columns(2),
+
+                                ])
+                        ),
+                ])
+                ->columns(5),
+            Infolists\Components\Section::make('Books')
+                ->description('List of books of this request')
+                ->collapsible()
+                ->schema([
+                    Infolists\Components\RepeatableEntry::make('books')
+                        ->hiddenLabel()
+                        ->contained(false)
+                        ->schema([
+                            Infolists\Components\TextEntry::make('title'),
+                            Infolists\Components\TextEntry::make('authors')
+                                ->formatStateUsing(fn($record) => $record->authorsName),
+                            Infolists\Components\TextEntry::make('category.name'),
+                            Infolists\Components\TextEntry::make('tags.name')
+                                ->badge()
+                                ->getStateUsing(fn($record) => $record->tagsName)
+                        ])->columns(4)
+                ]),
+            Infolists\Components\Section::make('Extensions')
+                ->description('List of extensions requested.')
+                ->visible(fn(Borrow $record): bool => $record->extensions()->exists())
+                ->collapsible()
+                ->schema([
+                    Infolists\Components\RepeatableEntry::make('extensions')
+                        ->hiddenLabel()
+                        ->schema([
+                            Infolists\Components\TextEntry::make('code'),
+                            Infolists\Components\TextEntry::make('number_of_days'),
+                            Infolists\Components\TextEntry::make('status')->badge(),
+                            Infolists\Components\TextEntry::make('reason'),
+                            Infolists\Components\Actions::make([
+                                Infolists\Components\Actions\Action::make('review_payment')
+                                    ->label('Review Payment')
+                                    ->visible(fn($record) => $record->status === ExtensionStatus::PAYMENT_SUBMITTED && $record->payment?->method === PaymentMethod::GCASH)
+                                    ->form([
+                                        Forms\Components\Group::make([
+                                            Forms\Components\Group::make([
+                                                Forms\Components\TextInput::make('amount')
+                                                    ->label('Amount')
+                                                    ->default(fn($record) => $record->fee)
+                                                    ->prefix('P')
+                                                    ->numeric(),
+                                                Forms\Components\ToggleButtons::make('method')
+                                                    ->label('Payment Method')
+                                                    ->options(PaymentMethod::class)
+                                                    ->inline()
+                                                    ->live(),
+
+                                                Forms\Components\FileUpload::make('supporting_document')
+                                                    ->required()
+                                                    ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
+                                                    ->label('Supporting Document'),
+                                            ]),
+                                            Forms\Components\Placeholder::make('qr_code')
+                                                ->label('Qr Code')
+                                                ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
+                                                ->content(new HtmlString("<img src='/images/qr_code.jpg' class='w-1/2' alt='QR Code'/>")),
+                                        ])->columns(),
+                                    ])
+                                    ->action(function (array $data, Extension $record) {
+                                        $data['paid_at'] = now();
+                                        $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
+
+                                        $record->payment()->update($data);
+                                    }),
+                                Infolists\Components\Actions\Action::make('approve')
+                                    ->label('Approve')
+                                    ->visible(fn($record) => $record->status === ExtensionStatus::PAYMENT_SUBMITTED  && $record->payment?->method === PaymentMethod::IN_COUNTER)
+                                    ->form([
+                                        Forms\Components\Group::make([
+                                            Forms\Components\Group::make([
+                                                Forms\Components\TextInput::make('amount')
+                                                    ->label('Amount')
+                                                    ->default(fn($record) => $record->fee)
+                                                    ->prefix('P')
+                                                    ->numeric(),
+                                                Forms\Components\ToggleButtons::make('method')
+                                                    ->label('Payment Method')
+                                                    ->options(PaymentMethod::class)
+                                                    ->inline()
+                                                    ->live(),
+
+                                                Forms\Components\FileUpload::make('supporting_document')
+                                                    ->required()
+                                                    ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
+                                                    ->label('Supporting Document'),
+                                            ]),
+                                            Forms\Components\Placeholder::make('qr_code')
+                                                ->label('Qr Code')
+                                                ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
+                                                ->content(new HtmlString("<img src='/images/qr_code.jpg' class='w-1/2' alt='QR Code'/>")),
+                                        ])->columns(),
+                                    ])
+                                    ->action(function (array $data, Extension $record) {
+                                        $data['paid_at'] = now();
+                                        $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
+
+                                        $record->payment()->update($data);
+                                    }),
+                            ]),
+                        ])
+                        ->columns(5)
+
+                ]),
 
         ])->columns(4);
     }

@@ -12,6 +12,7 @@ enum ExtensionStatus: string implements HasLabel, HasIcon, HasColor
     case APPROVED = 'Approved';
     case CANCEL = 'Cancel';
     case REJECTED = 'Rejected';
+    case PAYMENT_SUBMITTED = 'Payment Submitted';
 
     public function getLabel(): ?string
     {
@@ -23,6 +24,7 @@ enum ExtensionStatus: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             $this::PENDING => 'heroicon-o-clock',
             $this::APPROVED => 'heroicon-o-bars-3-bottom-left',
+            $this::PAYMENT_SUBMITTED => 'heroicon-o-check-badge',
             $this::CANCEL =>  'heroicon-o-check-x-circle',
             $this::REJECTED =>  'heroicon-o-no-symbol',
         };
@@ -31,12 +33,11 @@ enum ExtensionStatus: string implements HasLabel, HasIcon, HasColor
     public function getColor(): array|string|null
     {
         return match ($this) {
-            $this::PENDING ,
+            $this::PENDING,
             $this::CANCEL => 'gray',
             $this::APPROVED => 'info',
             $this::REJECTED => 'danger',
+            $this::PAYMENT_SUBMITTED => 'success'
         };
     }
-
-
 }

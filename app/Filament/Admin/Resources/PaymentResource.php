@@ -50,7 +50,7 @@ class PaymentResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('review')
                     ->label('Review')
-                    ->visible(fn($record) => $record->method === PaymentMethod::GCASH)
+                    ->visible(fn($record) => $record->method === PaymentMethod::GCASH && $record->status == PaymentStatus::PENDING_CONFIRMATION)
                     ->infolist([
                         Infolists\Components\ImageEntry::make('supporting_document')
                             ->alignJustify()

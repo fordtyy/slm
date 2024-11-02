@@ -10,6 +10,7 @@ use App\Enums\PenaltyStatus;
 use App\Filament\Account\Resources\BorrowResource;
 use App\Models\Borrow;
 use App\Models\User;
+use App\Services\BorrowService;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Forms\Get;
@@ -54,6 +55,7 @@ class ViewBorrow extends ViewRecord
                     $extension = $record->extensions()->create($data);
 
                     $extension->payment()->create([
+                        'reference' =>  $record->code,
                         'amount' => $extension->fee,
                         'status' => PaymentStatus::PENDING
                     ]);
@@ -109,6 +111,18 @@ class ViewBorrow extends ViewRecord
                     $record->penalties()->update([
                         'status' => PenaltyStatus::ON_PROCESS
                     ]);
+                }),
+            Actions\Action::make('Cancel')
+                ->visible(fn($record) => $record->status->value == 'Pending')
+                ->label('Cancel')
+                ->requiresConfirmation()
+                ->color('danger')
+                ->action(function ($record) {
+                    BorrowService::updateStatus($record, 'Cancel');
+                    Notification::make()
+                        ->success()
+                        ->title('Book request successfully cancelled!')
+                        ->send();
                 })
         ];
     }

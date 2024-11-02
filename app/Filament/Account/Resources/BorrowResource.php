@@ -238,15 +238,18 @@ class BorrowResource extends Resource
                             Infolists\Components\Actions::make([
                                 Infolists\Components\Actions\Action::make('pay_extension')
                                     ->label('Pay Extension')
-                                    ->visible(fn($record) => $record->payment?->status === PaymentStatus::PENDING)
+                                    ->visible(fn($record) => $record->status === ExtensionStatus::PENDING)
+                                    ->fillForm(fn($record) => [
+                                        'amount' => $record->fee
+                                    ])
                                     ->form([
                                         Forms\Components\Group::make([
                                             Forms\Components\Group::make([
-                                                Forms\Components\TextInput::make('amount')
+                                                Forms\Components\Hidden::make('amount')
+                                                    ->default(fn($record) => $record->fee),
+                                                Forms\Components\Placeholder::make('amount_display')
                                                     ->label('Amount')
-                                                    ->default(fn($record) => $record->fee)
-                                                    ->prefix('P')
-                                                    ->numeric(),
+                                                    ->content(fn(Get $get) => $get('amount')),
                                                 Forms\Components\ToggleButtons::make('method')
                                                     ->label('Payment Method')
                                                     ->options(PaymentMethod::class)
@@ -268,7 +271,13 @@ class BorrowResource extends Resource
                                         $data['paid_at'] = now();
                                         $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
 
-                                        $record->payment()->update($data);
+                                        // dd($record->payment);
+
+                                        $record->payment->update($data);
+
+                                        $record->update([
+                                            'status' => ExtensionStatus::PAYMENT_SUBMITTED
+                                        ]);
                                     }),
                             ]),
                         ])

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\BorrowStatus;
+use App\Enums\ExtensionStatus;
+use App\Enums\PenaltyStatus;
 use App\Traits\HasPayment;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -91,9 +93,19 @@ class Borrow extends Model
 
     public function canBeExtended(): bool
     {
-        return $this->status == BorrowStatus::RELEASED
+        return in_array($this->status, [BorrowStatus::RELEASED, BorrowStatus::EXTENDED])
+            && !$this->hasPendingPenalties()
             && $this->due_date?->gte(now())
-            && !$this->extensions()->exists();
+            && !$this->extensions()
+                ->whereIn('status', [ExtensionStatus::PENDING, ExtensionStatus::PAYMENT_SUBMITTED])
+                ->exists();
+    }
+
+    public function hasPendingPenalties()
+    {
+        return  $this->penalties()
+            ->whereIn('status', [PenaltyStatus::PENDING, PenaltyStatus::ON_PROCESS])
+            ->exists();
     }
 
     /**

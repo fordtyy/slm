@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\BorrowStatus;
 use App\Enums\ExtensionStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\PenaltyStatus;
 use App\Models\Borrow;
 use App\Models\Extension;
 use App\Models\Payment;
@@ -18,12 +20,6 @@ class PaymentService
             'status' => PaymentStatus::COMPLETED
         ]);
 
-        Notification::make()
-            ->success()
-            ->title('Success Payment Confirmation!')
-            ->body($payment->code . ' has been confirmed!')
-            ->sendToDatabase(Auth::user())
-            ->send();
         $payable = $payment->payable;
 
         if ($payable instanceof Extension) {
@@ -32,12 +28,25 @@ class PaymentService
             ]);
 
             $user = $payable->borrow->user;
+
+            BorrowService::updateStatus($payable->borrow, BorrowStatus::EXTENDED->value, $payable->number_of_days->value);
         }
 
         if ($payable instanceof Borrow) {
             $user = $payable->user;
+
+            $payable->penalties()->update([
+                'status' => PenaltyStatus::RESOLVE
+            ]);
         }
 
+        Notification::make()
+            ->success()
+            ->title('Success Payment Confirmation!')
+            ->body($payment->code . ' has been confirmed!')
+            ->sendToDatabase(Auth::user())
+            ->send();
+        // Send Notification to the borrower
         Notification::make()
             ->success()
             ->title('Payment Confirmed!')
