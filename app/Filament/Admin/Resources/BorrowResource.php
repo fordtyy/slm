@@ -329,7 +329,7 @@ class BorrowResource extends Resource
                                             Forms\Components\Placeholder::make('qr_code')
                                                 ->label('Qr Code')
                                                 ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
-                                                ->content(new HtmlString("<img src='/images/qr_code.jpg' class='w-1/2' alt='QR Code'/>")),
+                                                ->content(new HtmlString("<img src=" .  asset("/images/qr_code.jpg") . " class='w-1/2' alt='QR Code'/>")),
                                         ])->columns(),
                                     ])
                                     ->action(function (array $data, Extension $record) {
@@ -363,7 +363,7 @@ class BorrowResource extends Resource
                                             Forms\Components\Placeholder::make('qr_code')
                                                 ->label('Qr Code')
                                                 ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
-                                                ->content(new HtmlString("<img src='/images/qr_code.jpg' class='w-1/2' alt='QR Code'/>")),
+                                                ->content(new HtmlString("<img src=" .  asset("/images/qr_code.jpg") . " class='w-1/2' alt='QR Code'/>")),
                                         ])->columns(),
                                     ])
                                     ->action(function (array $data, Extension $record) {

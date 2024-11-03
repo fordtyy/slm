@@ -102,6 +102,7 @@ class BookResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('cover')
+                    ->disk('public')
                     ->label(''),
                 Tables\Columns\TextColumn::make('isbn')
                     ->label('ISBN')
@@ -163,6 +164,7 @@ class BookResource extends Resource
             ->schema([
                 Infolists\Components\Group::make([
                     Infolists\Components\ImageEntry::make('cover')
+                        ->disk('public')
                         ->height(400)
                         ->square()
                 ]),
