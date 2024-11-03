@@ -22,3 +22,8 @@
   --tw-bg-opacity: 1 !important;
   background-color: rgba(var(--c-600), var(--tw-bg-opacity)) !important;
 }
+
+img[alt=gcash] {
+  width: 300px;
+  height: 300px;
+}
