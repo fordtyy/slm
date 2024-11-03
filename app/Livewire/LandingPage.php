@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Book;
 use App\Models\BookBorrow;
 use App\Models\Borrow;
+use Carbon\Carbon;
 use Filament\Actions\Action as NativeAction;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -31,6 +32,7 @@ class LandingPage extends Component implements HasForms, HasInfolists, HasAction
 
     public $books = [];
     public $youMayLike = [];
+    public $trending = [];
 
     public function mount()
     {
@@ -53,6 +55,18 @@ class LandingPage extends Component implements HasForms, HasInfolists, HasAction
             ->orderByRaw('(SELECT COUNT(*) FROM book_borrow AS t2 WHERE t2.book_id = book_borrow.book_id) DESC')
             ->take(10)
             ->get();
+
+        $this->trending = Book::whereHas('borrows', function ($query) {
+            $query->whereMonth('borrows.created_at', Carbon::now()->month)
+                ->whereYear('borrows.created_at', Carbon::now()->year);
+                    
+        })
+        ->withCount(['borrows' => function ($query) {
+            $query->whereMonth('borrows.created_at', Carbon::now()->month)
+                  ->whereYear('borrows.created_at', Carbon::now()->year);
+        }])
+        ->orderBy('borrows_count', 'desc')
+        ->get();
 
         $this->youMayLike = Book::inRandomOrder()->limit(10)->get();
         $this->books = Book::whereIn('id', $bookTemp)->get();

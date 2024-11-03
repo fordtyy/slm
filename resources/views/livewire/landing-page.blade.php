@@ -40,6 +40,20 @@
             <div class="container">
               <div>
                 <div>
+                  <h3 class="text-2xl font-bold">Trending Books</h3>
+                </div>
+                <div>
+                    <div class="scroll-container py-4 ">
+                      @foreach ($this->trending as $book)
+                        <div class="scroll-card p-4 mt-4">
+                          <x-card wire:key="{{ $book->id }}-books" :book="$book" />
+                      </div>
+                    @endforeach
+                    </div>
+                </div>
+              </div>
+              <div class="mt-5">
+                <div>
                   <h3 class="text-2xl font-bold">Most Borrowed Books</h3>
                 </div>
                 <div>
