@@ -23,7 +23,7 @@
                 </a>
             </div>
             <div class="hidden lg:mt-0 lg:col-span-5 lg:flex">
-                <img src="/images/book.svg" alt="mockup" />
+                <img src="{{ asset('/images/book.svg') }}" alt="mockup" />
             </div>
         </div>
     </section>

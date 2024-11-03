@@ -2,7 +2,7 @@
         class="bg-white z-50 fixed w-full border-gray-200 dark:bg-gray-900 top-0 start-0 border-b border-gray-200 dark:border-gray-600 pt-3">
         <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 bg-red">
             <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-                <img src="/images/book_logo.png" class="h-8" alt="Gmelina Logo" />
+                <img src="{{ asset('/images/book_logo.png')}}" class="h-8" alt="Gmelina Logo" />
                 <span
                     class="self-center text-primary self-center md:text-2xl sm:text-2xl tracking-wide whitespace-nowrap dark:text-white">{{ config('app.name') }}</span>
             </a>
