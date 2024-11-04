@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\BorrowStatus;
 use App\Enums\ExtensionStatus;
+use App\Events\ExtensionStatusUpdate;
 use App\Models\Extension;
 
 class ExtensionService
@@ -19,5 +20,7 @@ class ExtensionService
         }
 
         $extension->update($data);
+
+        ExtensionStatusUpdate::dispatch($extension);
     }
 }

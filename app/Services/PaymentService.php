@@ -23,13 +23,9 @@ class PaymentService
         $payable = $payment->payable;
 
         if ($payable instanceof Extension) {
-            $payable->update([
-                'status' => ExtensionStatus::APPROVED
-            ]);
+            ExtensionService::updateStatus($payable, ExtensionStatus::APPROVED->value);
 
             $user = $payable->borrow->user;
-
-            BorrowService::updateStatus($payable->borrow, BorrowStatus::EXTENDED->value, $payable->number_of_days->value);
         }
 
         if ($payable instanceof Borrow) {
@@ -54,7 +50,8 @@ class PaymentService
             ->sendToDatabase($user);
     }
 
-    public static function reject(Payment $payment, string $remarks) {
+    public static function reject(Payment $payment, string $remarks)
+    {
         $payment->update([
             'status' => PaymentStatus::REJECTED,
             'remarks' => $remarks
@@ -69,9 +66,7 @@ class PaymentService
         $payable = $payment->payable;
 
         if ($payable instanceof Extension) {
-            $payable->update([
-                'status' => ExtensionStatus::REJECTED
-            ]);
+            ExtensionService::updateStatus($payable, ExtensionStatus::REJECTED->value);
 
             $user = $payable->borrow->user;
         }

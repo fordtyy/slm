@@ -11,6 +11,7 @@ use App\Filament\Account\Resources\BorrowResource;
 use App\Models\Borrow;
 use App\Models\User;
 use App\Services\BorrowService;
+use App\Services\ExtensionService;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Forms\Get;
@@ -72,6 +73,7 @@ class ViewBorrow extends ViewRecord
                         ->title('New Extension Request Added')
                         ->body("Code: [" . $extension->code . "]")
                         ->sendToDatabase(User::where('type', 'admin')->get());
+                    ExtensionService::updateStatus($extension, ExtensionStatus::PENDING->value);
                 }),
             Actions\Action::make('pay_penalty')
                 ->visible(fn(Borrow $record) => $record->penalties()->where('status', PenaltyStatus::PENDING)->exists())

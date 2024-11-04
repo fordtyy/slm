@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Extension;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -16,7 +17,7 @@ class ExtensionStatusUpdateMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct(public Extension $extension)
     {
         //
     }
@@ -38,16 +39,10 @@ class ExtensionStatusUpdateMail extends Mailable
     {
         return new Content(
             markdown: 'mail.extension-status-update-mail',
+            with: [
+                'borrower' => $this->extension->borrow->user,
+                'request' => $this->extension
+            ]
         );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }

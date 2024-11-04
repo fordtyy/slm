@@ -14,6 +14,7 @@ use App\Models\Extension;
 use App\Models\Penalty;
 use App\Models\User;
 use App\Services\BorrowService;
+use App\Services\ExtensionService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -271,14 +272,9 @@ class BorrowResource extends Resource
                                         $data['paid_at'] = now();
                                         $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
 
-                                        // dd($record->payment);
-
                                         $record->payment->update($data);
 
-                                        $record->update([
-                                            'status' => ExtensionStatus::PAYMENT_SUBMITTED
-                                        ]);
-                                    }),
+                                        ExtensionService::updateStatus($record, ExtensionStatus::PAYMENT_SUBMITTED->value);                                    }),
                             ]),
                         ])
                         ->columns(5)
