@@ -155,6 +155,7 @@ class BrowseBookPage extends Component implements HasForms, HasActions
             ->action(function (array $arguments) {
                 $record = Auth::user()->borrows()->create(['user_id' => Auth::id()]);
                 BookBorrow::create(['book_id' => $arguments['book'], 'borrow_id' => $record->id]);
+                BorrowService::updateStatus($record, BorrowStatus::PENDING->value);
                 Notification::make()
                     ->title('New Borrow Created!')
                     ->success()

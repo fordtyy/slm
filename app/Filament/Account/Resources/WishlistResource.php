@@ -2,10 +2,12 @@
 
 namespace App\Filament\Account\Resources;
 
+use App\Enums\BorrowStatus;
 use App\Filament\Account\Resources\WishlistResource\Pages;
 use App\Models\BookBorrow;
 use App\Models\BookUser;
 use App\Models\User;
+use App\Services\BorrowService;
 use Exception;
 use Filament\Forms\Form;
 use Filament\Notifications\Actions\Action as NotifActions;
@@ -72,6 +74,8 @@ class WishlistResource extends Resource
                         BookBorrow::insert($data);
                         BookUser::whereIn('id', $wishlistIds)->delete();
 
+                        BorrowService::updateStatus($borrowRecord, BorrowStatus::PENDING->value);
+                        
                         Notification::make()
                             ->title('New Borrow Created!')
                             ->success()
