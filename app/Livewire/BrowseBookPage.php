@@ -3,11 +3,13 @@
 namespace App\Livewire;
 
 use App\Enums\BorrowStatus;
+use App\Enums\PenaltyStatus;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookBorrow;
 use App\Models\BookUser;
 use App\Models\Category;
+use App\Models\Penalty;
 use App\Models\Tag;
 use App\Models\User;
 use App\Services\BorrowService;
@@ -41,6 +43,7 @@ class BrowseBookPage extends Component implements HasForms, HasActions
 
     public ?array $data = [];
     public $borrow_temp = "";
+    public $isPenalty = false;
 
     public function mount()
     {
@@ -66,6 +69,15 @@ class BrowseBookPage extends Component implements HasForms, HasActions
     #[Computed]
     public function books()
     {
+
+        $penaltiesExist = Penalty::where('user_id', $this->getUser()->id)
+            ->whereIn('status', [PenaltyStatus::PENDING, PenaltyStatus::ON_PROCESS])
+            ->exists();
+
+        if ($penaltiesExist) {
+            return [];
+        }
+
         $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn(
             'status',
             [
@@ -118,6 +130,7 @@ class BrowseBookPage extends Component implements HasForms, HasActions
         );
 
         return $paginatedBooks;
+
     }
 
     public function addToWishListAction(): NativeAction
