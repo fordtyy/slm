@@ -75,7 +75,7 @@ class BrowseBookPage extends Component implements HasForms, HasActions
             ->exists();
 
         if ($penaltiesExist) {
-            return [];
+            return ['result' => 'unresolved'];
         }
 
         $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn(
@@ -224,7 +224,6 @@ class BrowseBookPage extends Component implements HasForms, HasActions
                     ->native(false)
                     ->options(Category::pluck('name', 'id'))
                     ->multiple()
-                    ->optionsLimit(10)
                     ->live()
                     ->searchable()
                     ->placeholder('Search for category'),
@@ -232,7 +231,6 @@ class BrowseBookPage extends Component implements HasForms, HasActions
                     ->native(false)
                     ->options(Author::pluck('name', 'id'))
                     ->multiple()
-                    ->optionsLimit(10)
                     ->live()
                     ->searchable()
                     ->placeholder('Search for Author'),
@@ -240,7 +238,6 @@ class BrowseBookPage extends Component implements HasForms, HasActions
                     ->native(false)
                     ->options(Tag::pluck('name', 'id'))
                     ->multiple()
-                    ->optionsLimit(10)
                     ->live()
                     ->searchable()
                     ->placeholder('Search for Tag'),

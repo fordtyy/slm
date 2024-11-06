@@ -1,5 +1,5 @@
 <div>
-    @if (count($this->books) > 0)
+    @if ($this->books['result'] !== 'unresolved')
         <div class="mb-5 bg-success">
             {{ $this->form }}
         </div>

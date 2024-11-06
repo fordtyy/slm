@@ -22,6 +22,14 @@
         <div class="p-5 flex-grow flex flex-col justify-between">
             <div>
                 <div>
+                    <div class="mb-1">Category:</div>
+                    <div class="flex gap-3 mb-3">
+                        @foreach ($book->category()->get() as $category)
+                            <x-filament::badge>{{ $category->name }}</x-filament::badge>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
                     <div class="mb-1">Authors:</div>
                     <div class="flex gap-3 mb-3">
                         @foreach ($book->authors()->get() as $author)
