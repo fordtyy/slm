@@ -3,7 +3,7 @@
         {{ $this->form }}
     </div>
 
-    <div class="grid grid-cols-4 w-full gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-4 sm:grid-cols-1 md:grid-cols-3 w-full gap-4">
         @foreach ($this->getFilteredBooksProperty as $book)
             <x-card wire:key="{{ $book->id }}-books" :book="$book" />
         @endforeach
@@ -11,6 +11,6 @@
 
     <br>
     <div class="flex place-content-center mb-6">
-        {{ $this->getFilteredBooksProperty->links() }} 
+        {{ $this->getFilteredBooksProperty->links() }}
     </div>
 </div>

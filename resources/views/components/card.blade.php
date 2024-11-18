@@ -1,67 +1,23 @@
-<div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-    <div class="relative">
-        <img class="rounded-t-lg h-56 w-full" src="{{ asset('storage/' . $book->cover) }}" alt="{{ $book->title }}" />
-        <div class="absolute bottom-0 left-4 bg-blend-overlay">
-            <div class="relative group ">
-                <h5 id="book-title-{{ $book->id }}"
-                    class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white truncate"
-                    onmousemove="checkOverflow(event, '{{ $book->title }}', {{ $book->id }}, true)"
-                    onmouseleave="hideTooltip({{ $book->id }}, true)">
-                    {{ $book->title }}
-                </h5>
-
-                <div id="tooltip-book-{{ $book->id }}"
-                    class="absolute hidden px-4 py-2 bg-gray-800 text-white text-sm rounded-md shadow-lg whitespace-nowrap z-50 pointer-events-none stroke-orange-600">
-                    {{ $book->title }}
-                </div>
-            </div>
+<div
+    class="rounded-xl overflow-hidden shadow-xl bg-white dark:bg-gray-800 transform transition-all duration-300 hover:scale-105">
+    <img class="w-full h-64 object-cover" src="{{ asset('storage/' . $book->cover) }}" alt="{{ $book->title }}">
+    <div class="p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white hover:text-primary-600 transition-colors duration-300 relative overflow-hidden whitespace-nowrap text-ellipsis"
+            title="{{ $book->title }}">
+            {{ $book->title }}
+        </h2>
+        <p class="text-sm text-gray-500 mt-1">Category: {{ $book->category->name }}</p>
+        <p class="text-sm text-gray-500 mt-2">Authors: {{ $book->authorsName }}</p>
+        <div class="flex my-3 space-x-2">
+            @foreach ($book->tags as $tag)
+                <x-filament::badge>{{ $tag->name }}</x-filament::badge>
+            @endforeach
         </div>
-
-    </div>
-    <div class="h-full">
-        <div class="p-5 flex-grow flex flex-col justify-between">
-            <div>
-                <div>
-                    <div class="mb-1">Category:</div>
-                    <div class="flex gap-3 mb-3">
-                        @foreach ($book->category()->get() as $category)
-                            <x-filament::badge>{{ $category->name }}</x-filament::badge>
-                        @endforeach
-                    </div>
-                </div>
-                <div>
-                    <div class="mb-1">Authors:</div>
-                    <div class="flex gap-3 mb-3">
-                        @foreach ($book->authors()->get() as $author)
-                            <x-filament::badge>{{ $author->name }}</x-filament::badge>
-                        @endforeach
-                    </div>
-                </div>
-                <div>
-                    <div class="mb-1">Tags:</div>
-                    <div class="flex gap-3 mb-3">
-                        @foreach ($book->tags as $tag)
-                            <x-filament::badge>{{ $tag->name }}</x-filament::badge>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            <div class="flex space-x-2">
-                {{-- <x-filament::button wire:click="borrowBook({{ $book->id }})" @class([
-                    'col-span-5 text-sm card-button-borrow',
-                    'col-span-6 card-button-borrow' => $this->addedToWishList($book),
-                ])>
-                    Borrow
-                </x-filament::button> --}}
-                {{-- {{ dd($this->borrowAction)}} --}}
-                {{ ($this->borrowAction)(['book' => $book->id]) }}
-                @if (!$this->addedToWishList($book->id))
-                    {{ ($this->addToWishListAction)(['book' => $book->id]) }}
-                    {{-- <x-filament::button color="gray" :visible="false"
-                        wire:click="addToWishList({{ $book->id }})" icon-color="danger" icon="heroicon-o-heart"
-                        class="col-span-1 bg-green"></x-filament::button> --}}
-                @endif
-            </div>
+        <div class="flex space-x-2">
+            {{ ($this->borrowAction)(['book' => $book->id]) }}
+            @if (!$this->addedToWishList($book->id))
+                {{ ($this->addToWishListAction)(['book' => $book->id]) }}
+            @endif
         </div>
     </div>
 </div>

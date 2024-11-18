@@ -2,16 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+        width: 8px; /* Thinner scrollbar */
+        height: 8px; /* Thinner horizontal scrollbar */
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Light gray track */
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: none; /* Dark gray thumb */
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #e59d0d; /* Darker gray on hover */
+    }
+}
+
 .scroll-container {
-  scroll-snap-type: x proximity;
-  overflow-x: auto;
-  display: flex;
+    scroll-snap-type: x proximity;
+    overflow-x: auto;
+    display: flex;
 }
 
 .scroll-card {
-  scroll-snap-align: center;
-  flex: none;
-  width: 35vh;
+    scroll-snap-align: center;
+    flex: none;
+    /* width: 40vh; */
 }
 
 /* .scroll-card:hover {
@@ -19,11 +41,11 @@
 } */
 
 .card-button-borrow {
-  --tw-bg-opacity: 1 !important;
-  background-color: rgba(var(--c-600), var(--tw-bg-opacity)) !important;
+    --tw-bg-opacity: 1 !important;
+    background-color: rgba(var(--c-600), var(--tw-bg-opacity)) !important;
 }
 
-img[alt=gcash] {
-  width: 300px;
-  height: 300px;
+img[alt="gcash"] {
+    width: 300px;
+    height: 300px;
 }

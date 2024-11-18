@@ -1,21 +1,21 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-Bt_exWP5.css",
+    "file": "assets/app-CwRQBHId.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/filament/account/theme.css": {
-    "file": "assets/theme-jkoglDYo.css",
+    "file": "assets/theme-DBacoY04.css",
     "src": "resources/css/filament/admin/theme.css",
     "isEntry": true
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/theme-jkoglDYo.css",
+    "file": "assets/theme-DBacoY04.css",
     "src": "resources/css/filament/admin/theme.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-l0sNRNKZ.js",
+    "file": "assets/app-QoVGGnPT.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
