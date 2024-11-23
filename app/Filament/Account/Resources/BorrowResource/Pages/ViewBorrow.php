@@ -20,6 +20,7 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\IconPosition;
 use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
 class ViewBorrow extends ViewRecord
@@ -33,7 +34,7 @@ class ViewBorrow extends ViewRecord
                 ->icon('heroicon-o-folder-plus')
                 ->iconPosition(IconPosition::After)
                 ->outlined()
-                ->visible(fn($record) => $record->canBeExtended())
+                ->visible(fn($record) => $record->canBeExtended() && !Auth::user()->hasPenalties())
                 ->slideOver()
                 ->form([
                     Forms\Components\ToggleButtons::make('number_of_days')
@@ -78,7 +79,7 @@ class ViewBorrow extends ViewRecord
             Actions\Action::make('pay_penalty')
                 ->visible(fn(Borrow $record) => $record->penalties()->where('status', PenaltyStatus::PENDING)->exists())
                 ->fillForm(fn(Borrow $record): array => [
-                    'amount' => $record->penalties()->sum('amount')
+                    'amount' => $record->penalties()->where('status', PenaltyStatus::PENDING)->sum('amount')
                 ])
                 ->form([
                     Forms\Components\Hidden::make('amount'),
@@ -110,7 +111,7 @@ class ViewBorrow extends ViewRecord
 
                     $record->payment()->create($data);
 
-                    $record->penalties()->update([
+                    $record->penalties()->where('status', PenaltyStatus::PENDING)->update([
                         'status' => PenaltyStatus::ON_PROCESS
                     ]);
                 }),

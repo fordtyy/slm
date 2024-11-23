@@ -70,14 +70,6 @@ class BrowseBookPage extends Component implements HasForms, HasActions
     public function books()
     {
 
-        $penaltiesExist = Penalty::where('user_id', $this->getUser()->id)
-            ->whereIn('status', [PenaltyStatus::PENDING, PenaltyStatus::ON_PROCESS])
-            ->exists();
-
-        if ($penaltiesExist) {
-            return ['result' => 'unresolved'];
-        }
-
         $bookBorrows = BookBorrow::whereHas('borrow', fn($query) => $query->whereIn(
             'status',
             [
@@ -130,7 +122,6 @@ class BrowseBookPage extends Component implements HasForms, HasActions
         );
 
         return $paginatedBooks;
-
     }
 
     public function addToWishListAction(): NativeAction
@@ -166,6 +157,15 @@ class BrowseBookPage extends Component implements HasForms, HasActions
                 'class' => 'flex-1 text-sm card-button-borrow',
             ])
             ->action(function (array $arguments) {
+
+                if (Auth::user()->hasPenalties()) {
+                    return Notification::make()
+                        ->title('Action is Blocked!')
+                        ->body('Your are not allowed to this request because you have existing penalties.')
+                        ->warning()
+                        ->send();
+                }
+
                 $record = Auth::user()->borrows()->create(['user_id' => Auth::id()]);
                 BookBorrow::create(['book_id' => $arguments['book'], 'borrow_id' => $record->id]);
                 BorrowService::updateStatus($record, BorrowStatus::PENDING->value);
@@ -190,24 +190,6 @@ class BrowseBookPage extends Component implements HasForms, HasActions
                     ])
                     ->sendToDatabase(User::where('type', 'admin')->first());
             });
-    }
-
-
-    public function borrowBook(Book $book)
-    {
-        $this->borrow_temp = $book->id;
-        $this->dispatch('open-modal', id: 'borrow-modal');
-    }
-
-    public function closeModal()
-    {
-        $this->dispatch('close-modal', id: 'borrow-modal');
-    }
-
-    #[On('close-modal')]
-    public function afterModalClose(): void
-    {
-        $this->borrow_temp = "";
     }
 
     public function form(Form $form): Form

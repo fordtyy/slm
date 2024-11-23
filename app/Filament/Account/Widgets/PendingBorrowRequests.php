@@ -24,8 +24,8 @@ class PendingBorrowRequests extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(BorrowResource::getEloquentQuery()->where('status' , '=', 'Pending')
-              ->where('user_id' , '=', Auth::id()))
+            ->query(BorrowResource::getEloquentQuery()->where('status', '=', 'Pending')
+                ->where('user_id', Auth::id()))
             ->defaultPaginationPageOption(5)
             ->defaultSort('created_at', 'desc')
             ->columns([
@@ -37,18 +37,18 @@ class PendingBorrowRequests extends BaseWidget
 
             ])
             ->actions([
-              Tables\Actions\Action::make('Cancel')
-                ->visible(fn ($record) => $record->status->value == 'Pending')
-                ->label('Cancel')
-                ->requiresConfirmation()
-                ->color('danger')
-                ->action( function ($record) {
-                   BorrowService::updateStatus($record, 'Cancel');
-                   Notification::make()
+                Tables\Actions\Action::make('Cancel')
+                    ->visible(fn($record) => $record->status->value == 'Pending')
+                    ->label('Cancel')
+                    ->requiresConfirmation()
+                    ->color('danger')
+                    ->action(function ($record) {
+                        BorrowService::updateStatus($record, 'Cancel');
+                        Notification::make()
                             ->success()
                             ->title('Book request successfully cancelled!')
                             ->send();
-                })
+                    })
             ]);
     }
 }

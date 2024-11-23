@@ -230,10 +230,12 @@ class BorrowResource extends Resource
                 ->collapsible()
                 ->schema([
                     Infolists\Components\RepeatableEntry::make('extensions')
+                        ->grid()
                         ->hiddenLabel()
                         ->schema([
                             Infolists\Components\TextEntry::make('code'),
                             Infolists\Components\TextEntry::make('number_of_days'),
+                            Infolists\Components\TextEntry::make('fee')->money('PHP'),
                             Infolists\Components\TextEntry::make('status')->badge(),
                             Infolists\Components\TextEntry::make('reason'),
                             Infolists\Components\Actions::make([
@@ -277,7 +279,7 @@ class BorrowResource extends Resource
                                         ExtensionService::updateStatus($record, ExtensionStatus::PAYMENT_SUBMITTED->value);                                    }),
                             ]),
                         ])
-                        ->columns(5)
+                        ->columns(3)
 
                 ]),
         ]);

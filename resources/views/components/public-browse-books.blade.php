@@ -4,9 +4,11 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 sm:grid-cols-1 md:grid-cols-3 w-full gap-4">
-        @foreach ($this->getFilteredBooksProperty as $book)
+        @forelse ($this->getFilteredBooksProperty as $book)
             <x-card wire:key="{{ $book->id }}-books" :book="$book" />
-        @endforeach
+        @empty
+            <x-empty-result></x-empty-result>
+        @endforelse
     </div>
 
     <br>

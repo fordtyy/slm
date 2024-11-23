@@ -31,9 +31,10 @@ class PaymentService
         if ($payable instanceof Borrow) {
             $user = $payable->user;
 
-            $payable->penalties()->update([
-                'status' => PenaltyStatus::RESOLVE
-            ]);
+            $payable->penalties()->where('status', PenaltyStatus::ON_PROCESS)
+                ->update([
+                    'status' => PenaltyStatus::RESOLVE
+                ]);
         }
 
         Notification::make()

@@ -33,7 +33,7 @@ class WishlistResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('user_id', Auth::id())
-        ->count();
+            ->count();
     }
 
     public static function form(Form $form): Form
@@ -47,14 +47,15 @@ class WishlistResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->where('user_id', Auth::id()))
             ->columns([
                 ImageColumn::make('book.cover'),
                 TextColumn::make('book.title')
-                  ->label('Book Title'),
+                    ->label('Book Title'),
                 TextColumn::make('book.copies')
-                  ->label('Copies'),
+                    ->label('Copies'),
                 TextColumn::make('book.authors.name')
-                  ->badge()
+                    ->badge()
             ])
             ->filters([
                 //
@@ -64,44 +65,52 @@ class WishlistResource extends Resource
             ])
             ->bulkActions([
                 BulkAction::make('Borrow Books')
-                ->action(function (Collection $records, array $data) {
-                    try {
-                        $borrowRecord = Auth::user()->borrows()->create(['user_id' => Auth::id()]);
+                    ->action(function (Collection $records, array $data) {
+                        try {
 
-                        $wishlistIds = $records->pluck('id')->toArray();
-                        $data = self::getBookIdsWithBookBorrowId($records, $borrowRecord);
+                            if (Auth::user()->hasPenalties()) {
+                                return Notification::make()
+                                    ->title('Action is Blocked!')
+                                    ->body('Your are not allowed to this request because you have existing penalties.')
+                                    ->warning()
+                                    ->send();
+                            }
+                            $borrowRecord = Auth::user()->borrows()->create(['user_id' => Auth::id()]);
 
-                        BookBorrow::insert($data);
-                        BookUser::whereIn('id', $wishlistIds)->delete();
+                            $wishlistIds = $records->pluck('id')->toArray();
+                            $data = self::getBookIdsWithBookBorrowId($records, $borrowRecord);
 
-                        BorrowService::updateStatus($borrowRecord, BorrowStatus::PENDING->value);
-                        
-                        Notification::make()
-                            ->title('New Borrow Created!')
-                            ->success()
-                            ->actions([
-                                NotifActions::make('view_student')
-                                    ->hidden(fn() => Auth::user()->type === 'admin')
-                                    ->url(fn() => route('filament.account.resources.borrows.view', $borrowRecord))
-                                    ->label('View Request')
-                            ])
-                            ->sendToDatabase(Auth::user())
-                            ->send();
-                        Notification::make()
-                            ->title('New Borrow Created!')
-                            ->success()
-                            ->actions([
-                                NotifActions::make('view_admin')
-                                    ->label('View Request')
-                                    ->url(fn() => route('filament.admin.resources.borrows.view', $borrowRecord)),
-                            ])
-                            ->sendToDatabase(User::where('type', 'admin')->first());
-                        header("Refresh:0");
-                    } catch (Exception $e) {
-                        echo 'Message: ' .$e->getMessage();
-                    }
-                })
-                ->requiresConfirmation(),
+                            BookBorrow::insert($data);
+                            BookUser::whereIn('id', $wishlistIds)->delete();
+
+                            BorrowService::updateStatus($borrowRecord, BorrowStatus::PENDING->value);
+
+                            Notification::make()
+                                ->title('New Borrow Created!')
+                                ->success()
+                                ->actions([
+                                    NotifActions::make('view_student')
+                                        ->hidden(fn() => Auth::user()->type === 'admin')
+                                        ->url(fn() => route('filament.account.resources.borrows.view', $borrowRecord))
+                                        ->label('View Request')
+                                ])
+                                ->sendToDatabase(Auth::user())
+                                ->send();
+                            Notification::make()
+                                ->title('New Borrow Created!')
+                                ->success()
+                                ->actions([
+                                    NotifActions::make('view_admin')
+                                        ->label('View Request')
+                                        ->url(fn() => route('filament.admin.resources.borrows.view', $borrowRecord)),
+                                ])
+                                ->sendToDatabase(User::where('type', 'admin')->first());
+                            header("Refresh:0");
+                        } catch (Exception $e) {
+                            echo 'Message: ' . $e->getMessage();
+                        }
+                    })
+                    ->requiresConfirmation(),
             ])
             ->paginated(false);
     }
@@ -122,7 +131,7 @@ class WishlistResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-      return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
+        return !in_array(Request::route()->getName(), ['filament.account.pages.category-preferred', 'filament.account.pages.author-preferred']);
     }
 
     public static function getBookIdsWithBookBorrowId(Collection $records, $borrowRecord): array

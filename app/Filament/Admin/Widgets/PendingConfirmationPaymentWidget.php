@@ -25,6 +25,7 @@ class PendingConfirmationPaymentWidget extends BaseWidget
             ->columns([
                 Tables\Columns\TextColumn::make('code'),
                 Tables\Columns\TextColumn::make('method'),
+                Tables\Columns\TextColumn::make('amount'),
                 Tables\Columns\TextColumn::make('paid_at')
                     ->date(),
             ])

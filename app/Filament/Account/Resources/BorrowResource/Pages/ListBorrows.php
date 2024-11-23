@@ -18,17 +18,6 @@ class ListBorrows extends ListRecords
 
     protected static string $view = 'filament-panels::resources.pages.list-records';
 
-    public function mount(): void
-    {
-        $penaltiesExist = Penalty::where('user_id', $this->getUser()->id)
-            ->whereIn('status', [PenaltyStatus::PENDING, PenaltyStatus::ON_PROCESS])
-            ->exists();
-
-        if ($penaltiesExist) {
-            self::$view = 'livewire.blocked-page';
-        }
-    }
-
     public function getUser(): Authenticatable & Model
     {
         $user = Filament::auth()->user();
@@ -38,12 +27,5 @@ class ListBorrows extends ListRecords
         }
 
         return $user;
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
     }
 }

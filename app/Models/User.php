@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PenaltyStatus;
 use App\Enums\UserType;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,6 +10,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -139,5 +141,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function penalties(): HasMany
     {
         return $this->hasMany(Penalty::class);
+    }
+
+    public function hasPenalties()
+    {
+        return $this->penalties()->whereIn('status', [
+            PenaltyStatus::PENDING,
+            PenaltyStatus::ON_PROCESS
+        ])->exists();
     }
 }

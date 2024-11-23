@@ -88,13 +88,14 @@ class ExtensionResource extends Resource
                                         Infolists\Components\RepeatableEntry::make('borrow.books')
                                             ->hiddenLabel()
                                             ->schema([
-                                                Infolists\Components\Group::make([
-                                                    Infolists\Components\TextEntry::make('title'),
-                                                    Infolists\Components\TextEntry::make('authors.name')
-                                                        ->badge(),
-                                                ])
-
-                                            ])
+                                                Infolists\Components\TextEntry::make('title'),
+                                                Infolists\Components\TextEntry::make('authors')
+                                                    ->formatStateUsing(fn($record) => $record->authorsName),
+                                                Infolists\Components\TextEntry::make('category.name'),
+                                                Infolists\Components\TextEntry::make('tags.name')
+                                                    ->badge()
+                                                    ->getStateUsing(fn($record) => $record->tagsName)
+                                            ])->columns(4)
                                     ])
 
                             ])

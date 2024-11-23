@@ -79,8 +79,7 @@ class AccountPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
-                AccountMiddleware::class,
-                BlockedMiddleware::class,
+                AccountMiddleware::class
             ])
             ->databaseNotifications();
     }
