@@ -17,6 +17,7 @@ class Penalty extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'code',
         'status',
         'amount',
         'remarks',
@@ -34,6 +35,22 @@ class Penalty extends Model
         return [
             'status' => PenaltyStatus::class,
         ];
+    }
+
+    /**
+     * The "booted" method of the model.
+     */
+    public static function booted()
+    {
+        parent::boot();
+
+        self::creating(function (Penalty $model) {
+            $date = now()->format('Ymd-');
+
+            $totalPenaltyToday = Penalty::whereDate('created_at', now()->today())->count();
+
+            $model->code = 'PE-' . $date . str($totalPenaltyToday + 1)->padLeft(3, '0');
+        });
     }
 
     /**

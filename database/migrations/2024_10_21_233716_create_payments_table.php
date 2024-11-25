@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('reference');
+            $table->string('source_code');
             $table->string('status');
             $table->string('method')->nullable();
             $table->decimal('amount')->default(0);

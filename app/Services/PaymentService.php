@@ -22,19 +22,18 @@ class PaymentService
 
         $payable = $payment->payable;
 
-        if ($payable instanceof Extension) {
-            ExtensionService::updateStatus($payable, ExtensionStatus::APPROVED->value);
-
-            $user = $payable->borrow->user;
-        }
-
         if ($payable instanceof Borrow) {
             $user = $payable->user;
 
-            $payable->penalties()->where('status', PenaltyStatus::ON_PROCESS)
-                ->update([
-                    'status' => PenaltyStatus::RESOLVE
-                ]);
+            if (str($payment->source_code)->startsWith('ER')) {
+                $extension = Extension::where('code', $payment->source_code)->first();
+                ExtensionService::updateStatus($extension, ExtensionStatus::APPROVED->value);
+            } elseif (str($payable->source_code)->startsWith('PE')) {
+                $payable->penalties()->where('status', PenaltyStatus::ON_PROCESS)
+                    ->update([
+                        'status' => PenaltyStatus::RESOLVE
+                    ]);
+            }
         }
 
         Notification::make()

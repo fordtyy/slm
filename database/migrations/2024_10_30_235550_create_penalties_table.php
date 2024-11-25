@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('penalties', function (Blueprint $table) {
             $table->id();
+            $table->string('code');
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Borrow::class)->constrained()->cascadeOnDelete();
             $table->decimal('amount');

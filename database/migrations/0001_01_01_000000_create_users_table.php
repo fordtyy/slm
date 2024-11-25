@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('usn')->unique();
             $table->string('password');
             $table->string('type');
+            $table->dateTime('blocked_at')->nullable();
             $table->foreignId('course_id')
                 ->constrained();
             $table->foreignId('year_level_id');

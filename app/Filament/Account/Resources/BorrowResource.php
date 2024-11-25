@@ -7,6 +7,7 @@ use App\Enums\ExtensionDays;
 use App\Enums\ExtensionStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\PenaltyStatus;
 use App\Filament\Account\Resources\BorrowResource\Pages;
 use App\Filament\Account\Resources\BorrowResource\RelationManagers;
 use App\Models\Borrow;
@@ -170,11 +171,14 @@ class BorrowResource extends Resource
     {
         return  $infolist->schema([
             Infolists\Components\Section::make('Penalties')
-                ->visible(fn($record) => $record->penalties()->exists())
+                ->visible(fn($record) => $record->penalties()->whereIn('status', [
+                    PenaltyStatus::ON_PROCESS,
+                    PenaltyStatus::PENDING
+                ])->exists())
                 ->description('List of penalties of this requested.')
                 ->aside()
                 ->schema([
-                    Infolists\Components\RepeatableEntry::make('penalties')
+                    Infolists\Components\RepeatableEntry::make('pendingPenalties')
                         ->hiddenLabel()
                         ->schema([
                             Infolists\Components\TextEntry::make('created_at')
@@ -183,7 +187,6 @@ class BorrowResource extends Resource
                             Infolists\Components\TextEntry::make('amount'),
                             Infolists\Components\TextEntry::make('status')->badge(),
                             Infolists\Components\TextEntry::make('remarks'),
-
                         ])->columns(4)
 
                 ]),
@@ -224,71 +227,14 @@ class BorrowResource extends Resource
                                 ->getStateUsing(fn($record) => $record->tagsName)
                         ])->columns(4)
                 ]),
-            Infolists\Components\Section::make('Extensions')
-                ->description('List of extensions requested.')
-                ->visible(fn(Borrow $record): bool => $record->extensions()->exists())
-                ->collapsible()
-                ->schema([
-                    Infolists\Components\RepeatableEntry::make('extensions')
-                        ->grid()
-                        ->hiddenLabel()
-                        ->schema([
-                            Infolists\Components\TextEntry::make('code'),
-                            Infolists\Components\TextEntry::make('number_of_days'),
-                            Infolists\Components\TextEntry::make('fee')->money('PHP'),
-                            Infolists\Components\TextEntry::make('status')->badge(),
-                            Infolists\Components\TextEntry::make('reason'),
-                            Infolists\Components\Actions::make([
-                                Infolists\Components\Actions\Action::make('pay_extension')
-                                    ->label('Pay Extension')
-                                    ->visible(fn($record) => $record->status === ExtensionStatus::PENDING)
-                                    ->fillForm(fn($record) => [
-                                        'amount' => $record->fee
-                                    ])
-                                    ->form([
-                                        Forms\Components\Group::make([
-                                            Forms\Components\Group::make([
-                                                Forms\Components\Hidden::make('amount')
-                                                    ->default(fn($record) => $record->fee),
-                                                Forms\Components\Placeholder::make('amount_display')
-                                                    ->label('Amount')
-                                                    ->content(fn(Get $get) => $get('amount')),
-                                                Forms\Components\ToggleButtons::make('method')
-                                                    ->label('Payment Method')
-                                                    ->options(PaymentMethod::class)
-                                                    ->inline()
-                                                    ->live(),
-
-                                                Forms\Components\FileUpload::make('supporting_document')
-                                                    ->required()
-                                                    ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
-                                                    ->label('Supporting Document'),
-                                            ]),
-                                            Forms\Components\Placeholder::make('qr_code')
-                                                ->label('Qr Code')
-                                                ->visible(fn(Get $get) => $get('method') == PaymentMethod::GCASH->value)
-                                                ->content(new HtmlString("<img src=" .  asset("/images/qr_code.jpg") . " class='w-1/2' alt='QR Code'/>")),
-                                        ])->columns(),
-                                    ])
-                                    ->action(function (array $data, Extension $record) {
-                                        $data['paid_at'] = now();
-                                        $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
-
-                                        $record->payment->update($data);
-
-                                        ExtensionService::updateStatus($record, ExtensionStatus::PAYMENT_SUBMITTED->value);                                    }),
-                            ]),
-                        ])
-                        ->columns(3)
-
-                ]),
         ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ExtensionsRelationManager::class,
+            RelationManagers\PaymentsRelationManager::class
         ];
     }
 

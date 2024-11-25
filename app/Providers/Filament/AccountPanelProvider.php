@@ -31,6 +31,7 @@ class AccountPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->default()
             ->id('account')
             ->path('account')
             ->emailVerification()
@@ -79,7 +80,8 @@ class AccountPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 RedirectIfNotFilamentAuthenticated::class,
-                AccountMiddleware::class
+                AccountMiddleware::class,
+                BlockedMiddleware::class
             ])
             ->databaseNotifications();
     }

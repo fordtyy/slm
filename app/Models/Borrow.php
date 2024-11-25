@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Borrow extends Model
@@ -103,9 +104,7 @@ class Borrow extends Model
 
     public function hasPendingPenalties()
     {
-        return  $this->penalties()
-            ->whereIn('status', [PenaltyStatus::PENDING, PenaltyStatus::ON_PROCESS])
-            ->exists();
+        return  $this->pendingPenalties()->exists();
     }
 
     /**
@@ -116,5 +115,11 @@ class Borrow extends Model
     public function penalties(): HasMany
     {
         return $this->hasMany(Penalty::class);
+    }
+
+    public function pendingPenalties()
+    {
+        return $this->penalties()
+            ->whereIn('status', [PenaltyStatus::PENDING, PenaltyStatus::ON_PROCESS]);
     }
 }

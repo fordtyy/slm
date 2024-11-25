@@ -168,7 +168,7 @@ class BorrowResource extends Resource
                     ->icon('heroicon-o-bars-arrow-down')
                     ->iconButton()
                     ->requiresConfirmation()
-                    ->visible(fn($record) => in_array($record->status, [BorrowStatus::RELEASED, BorrowStatus::EXTENDED]))
+                    ->visible(fn($record) => in_array($record->status, [BorrowStatus::RELEASED, BorrowStatus::EXTENDED]) || ($record->status === BorrowStatus::DUE && !$record->hasPendingPenalties()))
                     ->action(function (Borrow $record) {
                         BorrowService::updateStatus($record, BorrowStatus::RETURNED->value);
                         Notification::make()
@@ -384,7 +384,8 @@ class BorrowResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ExtensionsRelationManager::class,
+            RelationManagers\PaymentRelationManager::class
         ];
     }
 

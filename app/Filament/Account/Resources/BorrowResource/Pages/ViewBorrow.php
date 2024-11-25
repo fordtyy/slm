@@ -50,31 +50,7 @@ class ViewBorrow extends ViewRecord
                 ->modalWidth(MaxWidth::Large)
                 ->modalFooterActionsAlignment(Alignment::Right)
                 ->action(function (array $data, Borrow $record) {
-                    $data['status'] = ExtensionStatus::PENDING;
-
-                    $data['fee'] = $data['number_of_days'] * 15;
-
-                    $extension = $record->extensions()->create($data);
-
-                    $extension->payment()->create([
-                        'reference' =>  $record->code,
-                        'amount' => $extension->fee,
-                        'status' => PaymentStatus::PENDING
-                    ]);
-
-                    Notification::make()
-                        ->success()
-                        ->title('Extension Request created!')
-                        ->body("Code: [" . $extension->code . "]")
-                        ->sendToDatabase($record->user)
-                        ->send();
-
-                    Notification::make()
-                        ->info()
-                        ->title('New Extension Request Added')
-                        ->body("Code: [" . $extension->code . "]")
-                        ->sendToDatabase(User::where('type', 'admin')->get());
-                    ExtensionService::updateStatus($extension, ExtensionStatus::PENDING->value);
+                    ExtensionService::create($data, $record);
                 }),
             Actions\Action::make('pay_penalty')
                 ->visible(fn(Borrow $record) => $record->penalties()->where('status', PenaltyStatus::PENDING)->exists())
@@ -108,8 +84,12 @@ class ViewBorrow extends ViewRecord
                     $data['paid_at'] = now();
                     $data['status'] = PaymentStatus::PENDING_CONFIRMATION;
                     $data['reference'] = $record->code;
+                    $data['source_code'] = $record->penalties()
+                        ->where('status', PenaltyStatus::PENDING)
+                        ->pluck('code')
+                        ->join(', ');
 
-                    $record->payment()->create($data);
+                    $record->payments()->create($data);
 
                     $record->penalties()->where('status', PenaltyStatus::PENDING)->update([
                         'status' => PenaltyStatus::ON_PROCESS

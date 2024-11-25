@@ -2,9 +2,11 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\BlockStatus;
 use App\Enums\UserType;
 use App\Filament\Admin\Resources\StudentResource\Pages;
 use App\Filament\Admin\Resources\StudentResource\RelationManagers;
+use App\Mail\StatusBlockMail;
 use App\Models\Student;
 use App\Models\User;
 use Filament\Forms;
@@ -16,6 +18,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class StudentResource extends Resource
 {
@@ -50,6 +53,8 @@ class StudentResource extends Resource
                             'blocked_at' => now()
                         ]);
 
+                        Mail::to($record->email)->send(new StatusBlockMail($record, BlockStatus::BLOCKED));
+
                         Notification::make()
                             ->success()
                             ->title('Blocked Success')
@@ -70,6 +75,8 @@ class StudentResource extends Resource
                         $record->update([
                             'blocked_at' => null
                         ]);
+
+                        Mail::to($record->email)->send(new StatusBlockMail($record, BlockStatus::UNBLOCKED));
 
                         Notification::make()
                             ->success()

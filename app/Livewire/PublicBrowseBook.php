@@ -37,13 +37,13 @@ class PublicBrowseBook extends Component implements HasForms, HasActions
     {
         $this->form->fill();
 
-        if (Filament::auth()->check()) {
-            if (Filament::auth() && Filament::auth()->user()->type === 'student') {
-                return redirect()->route('filament.account.pages.account-dashboard');
-            } else {
-                return redirect()->route('filament.admin.pages.dashboard');
-            }
-        }
+        // if (Filament::auth()->check()) {
+        //     if (Filament::auth() && Filament::auth()->user()->type === 'student') {
+        //         return redirect()->route('filament.account.pages.account-dashboard');
+        //     } else {
+        //         return redirect()->route('filament.admin.pages.dashboard');
+        //     }
+        // }
     }
 
     #[Computed]

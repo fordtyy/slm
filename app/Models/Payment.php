@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -20,6 +21,7 @@ class Payment extends Model
     protected $fillable = [
         'code',
         'reference',
+        'source_code',
         'status',
         'amount',
         'method',
@@ -60,6 +62,6 @@ class Payment extends Model
 
     public function payable(): MorphTo
     {
-        return $this->morphTo('payable');
+        return $this->morphTo();
     }
 }

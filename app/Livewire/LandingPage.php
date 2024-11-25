@@ -36,13 +36,13 @@ class LandingPage extends Component implements HasForms, HasInfolists, HasAction
 
     public function mount()
     {
-        if (Filament::auth()->check()) {
-            if (Filament::auth() && Filament::auth()->user()->type === 'student') {
-                return redirect()->route('filament.account.pages.account-dashboard');
-            } else {
-                return redirect()->route('filament.admin.pages.dashboard');
-            }
-        }
+        // if (Filament::auth()->check()) {
+        //     if (Filament::auth() && Filament::auth()->user()->type === 'student') {
+        //         return redirect()->route('filament.account.pages.account-dashboard');
+        //     } else {
+        //         return redirect()->route('filament.admin.pages.dashboard');
+        //     }
+        // }
 
         $bookTemp = BookBorrow::select('book_id')
             ->whereIn('book_id', function ($query) {
@@ -59,7 +59,7 @@ class LandingPage extends Component implements HasForms, HasInfolists, HasAction
         $this->trending = Book::whereHas('borrows', function ($query) {
             $query->whereMonth('borrows.created_at', Carbon::now()->month)
                 ->whereYear('borrows.created_at', Carbon::now()->year);
-                    
+
         })
         ->withCount(['borrows' => function ($query) {
             $query->whereMonth('borrows.created_at', Carbon::now()->month)

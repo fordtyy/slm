@@ -1,3 +1,13 @@
 @import '/vendor/filament/filament/resources/css/theme.css';
 
 @config 'tailwind.config.js';
+
+.fi-page-sub-navigation-tabs {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.fi-tabs {
+    margin-left: 0;
+    margin-right: 0;
+}

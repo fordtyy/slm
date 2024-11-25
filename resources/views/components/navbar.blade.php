@@ -30,10 +30,15 @@
                         Library</a>
                 </li>
 
-                <x-filament::button class="flex align-middle" href="{{ route('filament.auth.auth.login') }}" tag="a">
-                    Login
-                </x-filament::button>
-
+                @guest
+                    <x-filament::button class="flex align-middle" href="{{ route('filament.auth.auth.login') }}"
+                        tag="a">
+                        Login
+                    </x-filament::button>
+                @endguest
+                @auth
+                    <x-filament-panels::user-menu />
+                @endauth
             </ul>
         </div>
     </div>

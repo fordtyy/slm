@@ -26,6 +26,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Actions\ActionGroup;
 use Filament\Notifications\Notification;
+use GeminiAPI\Laravel\Facades\Gemini;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -81,7 +82,17 @@ class BrowseBookPage extends Component implements HasForms, HasActions
         )
             ->where('user_id', Auth::id()))
             ->pluck('book_id');
+        Auth::user()->course->name;
 
+
+        $prompt = "Given the course " . Auth::user()->course->name .
+            " suggest from the list of tags " .
+            json_encode(Tag::pluck('name')->all()) .
+            " that will help the student.The output should only be the PHP array of relevant tags based on the course title. Do not include any explanations, comments, markup or extra text in the response. Only provide the array as the final output. use double quote";
+
+        $stringTags = Gemini::generateText($prompt); // Will return suggested tags based on course.
+
+        $suggestedTags = json_decode($stringTags);
 
         $books = Book::when($this->data['title'], fn($query, $value) => $query->where('title', 'like', '%' . $value . '%'))
             ->when($this->data['category'], fn($query, $value) => $query->whereIn('category_id', $value))
@@ -91,6 +102,13 @@ class BrowseBookPage extends Component implements HasForms, HasActions
             ->when($this->data['tags'], fn($query, $value) => $query->whereHas('tags', function ($query) use ($value) {
                 $query->whereIn('tag_id', $value);
             }))
+            ->when($suggestedTags, fn($query, $tags) => $query->whereHas('tags', function ($sub) use ($tags) {
+                if (is_array($tags)) {
+                    foreach ($tags as $tag) {
+                        $sub->orWhere('name', 'like', '%' . $tag . '%');
+                    }
+                }
+            }))
             ->where('copies', '>', 0)
             ->whereNotIn('id', $bookBorrows)
             ->get();
@@ -99,12 +117,12 @@ class BrowseBookPage extends Component implements HasForms, HasActions
         $preferredAuthorIds = $this->getUser()->authorPrefs()->pluck('authors.id')->toArray();
 
         // manual sort the books based on user's preferences
-        $sortedBooks = $books->sortBy(function ($book) use ($preferredAuthorIds, $preferredCategoryIds) {
+        $sortedBooks = $books->sortBy(function ($book) use ($preferredAuthorIds, $preferredCategoryIds, $suggestedTags) {
             $authorPriority = in_array($book->authors->first()->id, $preferredAuthorIds) ? 1 : 2; // 1 is book has an author that is preferred while 2 is not
             $categoryPriority = in_array($book->category_id, $preferredCategoryIds) ? 1 : 2; // 1 is book has category that is preferred while 2 is not
-
+            $tagPriority = array_intersect($book->tags->pluck('name')->all(), $suggestedTags) ? 3 : 4;
             // how the book should be prioritized, the lower resuult is the more prioritized
-            return $authorPriority * 10 + $categoryPriority;
+            return $authorPriority * 10 + $categoryPriority + $tagPriority;
         });
 
         // Paginate manually

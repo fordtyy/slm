@@ -40,6 +40,7 @@ class PaymentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('code')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('reference')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('source_code')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('amount'),
                 Tables\Columns\TextColumn::make('method'),
                 Tables\Columns\TextColumn::make('paid_at')
