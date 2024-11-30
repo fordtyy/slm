@@ -77,20 +77,22 @@ class BorrowService
             ->each(function (Borrow $borrow) {
                 $borrower = $borrow->user;
 
-                if ($borrow->due_date->between($borrow->due_date, now())) {
-                    self::updateStatus($borrow, BorrowStatus::DUE->value);
+                if (now()->gte($borrow->due_date)) {
+                    if ($borrow->status === BorrowStatus::RELEASED) {
+                        self::updateStatus($borrow, BorrowStatus::DUE->value);
+                    }
 
                     $penaltyData = [
                         'user_id' => $borrower->id,
                         'status' => PenaltyStatus::PENDING
                     ];
 
-                    if ($borrow->penalties()->exists()) {
-                        $penaltyData['amount'] = 5;
-                        $penaltyData['remarks'] = 'Penalty extension.';
-                    } else {
+                    if ($borrow->due_date->isToday()) {
                         $penaltyData['amount'] = 50;
                         $penaltyData['remarks'] = 'Request is due.';
+                    } else {
+                        $penaltyData['amount'] = 5;
+                        $penaltyData['remarks'] = 'Penalty extension.';
                     }
 
                     $borrow->penalties()->create($penaltyData);

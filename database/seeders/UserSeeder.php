@@ -69,7 +69,7 @@ class UserSeeder extends Seeder
       "updated_at" => Carbon::now()
     );
 
-    $users = [$admin];
+    $users = [$admin, $student, $student1, $student2];
 
     foreach ($users as $x) {
       DB::table('users')->insert([
