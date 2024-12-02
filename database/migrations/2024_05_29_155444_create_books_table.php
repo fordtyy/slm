@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('year');
             $table->string('copies');
             $table->string('volume')->nullable();
-            $table->foreignIdFor(Category::class)->constrained()->nullOnDelete();
+            $table->foreignIdFor(Category::class)->constrained();
             $table->softDeletesTz();
             $table->timestamps();
         });
