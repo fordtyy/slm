@@ -22,7 +22,7 @@ class Overview extends BaseWidget
     {
         $borrowData = Borrow::query()
             ->selectRaw("DATE(created_at) as date, COUNT(*) as total")
-            ->whereBetween('date', [
+            ->whereBetween('created_at', [
                 now()->startOfMonth(),
                 now()->endOfMonth()
             ])
