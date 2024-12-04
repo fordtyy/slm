@@ -90,9 +90,9 @@ class BrowseBookPage extends Component implements HasForms, HasActions
             json_encode(Tag::pluck('name')->all()) .
             " that will help the student.The output should only be the PHP array of relevant tags based on the course title. Do not include any explanations, comments, markup or extra text in the response. Only provide the array as the final output. use double quote";
 
-        $stringTags = Gemini::generateText($prompt); // Will return suggested tags based on course.
+        // $stringTags = Gemini::generateText($prompt); // Will return suggested tags based on course.
 
-        $suggestedTags = json_decode($stringTags);
+        $suggestedTags = json_decode("[]");
 
         $books = Book::when($this->data['title'], fn($query, $value) => $query->where('title', 'like', '%' . $value . '%'))
             ->when($this->data['category'], fn($query, $value) => $query->whereIn('category_id', $value))
