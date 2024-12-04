@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
 use Filament\Http\Responses\Auth\Contracts\EmailVerificationResponse;
@@ -33,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_START ,
+            fn (): string => "<link rel='icon' type='image/png' sizes='16x16' href='". asset('/images/favicon.png')  ."'>",
+        );
     }
 }
