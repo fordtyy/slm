@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{{ config('app.name') }}</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset("/images/favicon.png")}}">
 
     <style>
         [x-cloak] {
